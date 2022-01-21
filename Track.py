@@ -47,7 +47,7 @@ class Track:
             self.line_shapes.append(line)
 
             # If this is not the first reward line
-            if len(self.lines) > 1:
+            if len(self.line_shapes) > 1:
 
                 # Draw joining track triangles
                 old_pair = self.track_vertices[-2]
@@ -69,14 +69,14 @@ class Track:
         Clear / reset the track.
         '''
 
-        for line in self.lines:
+        for line in self.line_shapes:
             line.delete()
-        for shape in self.track:
+        for shape in self.track_shapes:
             shape.delete()
 
         self.track_vertices = []
-        self.lines = []
-        self.track = []
+        self.line_shapes = []
+        self.track_shapes= []
 
     def save(self, filename):
         '''

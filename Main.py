@@ -78,11 +78,11 @@ def on_draw():
     window.clear()
     label.draw()
 
-    for i in track.track:
+    for i in track.track_shapes:
         i.draw()
-    for i in track.lines:
+    for i in track.line_shapes:
         i.draw()
-    
+
     car.draw()
     vector.draw()
     drag.draw()
