@@ -82,10 +82,12 @@ def on_draw():
         i.draw()
     for i in track.line_shapes:
         i.draw()
+    for i in track.temp_shapes:
+        i.draw()
 
     car.draw()
     vector.draw()
     drag.draw()
 
-car = Car(50, 50, 0.95, vector)
+car = Car(400, 200, 0.95, vector, track)
 pyglet.app.run()

@@ -1,11 +1,14 @@
+from dataclasses import asdict
 import pyglet
 import numpy as np
 
 class Track:
     def __init__(self):
         self.track_vertices = []
+        self.tmp_vertex = ()
         self.line_shapes = []
         self.track_shapes = []
+        self.temp_shapes = []
 
     def __str__(self):
         return str(self.track_vertices)
@@ -18,18 +21,15 @@ class Track:
         Adds a vertex to the track.
         '''
 
-        # If the vertex being placed is the first vertex
-        if len(self.track_vertices) == 0:
-            self.track_vertices.append([(x, y)])
+        # If the vertex being placed is the first vertex, or the pair of vertices is complete and a new vertex needs to be created
+        if self.tmp_vertex == ():
+            self.tmp_vertex = (x, y)
 
         # If the first vertex in the pair has already been placed
-        elif len(self.track_vertices[-1]) == 1:
-            self.track_vertices[-1].append((x, y))
+        else:
+            self.track_vertices.append((self.tmp_vertex, (x, y)))
+            self.tmp_vertex = ()
             self.update_shapes()
-
-        # If the pair of vertices is complete and a new vertex needs to be created
-        elif len(self.track_vertices[-1]) == 2:
-            self.track_vertices.append([(x, y)])
 
     def update_shapes(self):
         '''
@@ -37,7 +37,7 @@ class Track:
         '''
 
         # If the pair of vertices is complete
-        if len(self.track_vertices[-1]) == 2:
+        if self.tmp_vertex == ():
 
             # Draw reward line between two vertices
             new_pair = self.track_vertices[-1]
@@ -64,6 +64,57 @@ class Track:
                 self.line_shapes.append(pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], old_pair[0][0], old_pair[0][1], 3, color=(0, 0, 0)))
                 self.line_shapes.append(pyglet.shapes.Line(new_pair[1][0], new_pair[1][1], old_pair[1][0], old_pair[1][1], 3, color=(0, 0, 0)))
 
+    def distance_to_intersection(self, a1, a2):
+        '''
+        Finds the distance to the intersection point of a line and any line in the track.
+        '''
+
+        if len(self.track_vertices) > 0:
+            track_vertices = np.array(self.track_vertices)
+            lines = np.concatenate((track_vertices[:, 0], track_vertices[:, 1]))
+
+            for shape in self.temp_shapes:
+                shape.delete()
+
+            self.temp_shapes = []
+            intersections = []
+            distances = []
+
+            for i in range(len(lines) - 1):
+                b1 = lines[i]
+                b2 = lines[i + 1]
+
+                s = np.vstack([a1, a2, b1, b2])
+                h = np.hstack((s, np.ones((4, 1))))
+
+                l1 = np.cross(h[0], h[1])
+                l2 = np.cross(h[2], h[3])
+
+                x, y, z = np.cross(l1, l2)
+
+                if z == 0:
+                    return (float('inf'), float('inf'))
+
+                Px = x / z
+                Py = y / z
+                P = np.array((Px, Py))
+
+                if Px > min(b1[0], b2[0]) and Px < max(b1[0], b2[0]) and Py > min(b1[1], b2[1]) and Py < max(b1[1], b2[1]):
+                    intersections.append(P)
+                    distances.append(np.sqrt(np.sum((P - a1)**2)))
+                
+            if len(distances) > 0:
+                P = intersections[distances.index(min(distances))]
+
+                self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 255, 0)))
+                self.temp_shapes.append(pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0)))
+
+                return P, min(distances)
+            
+            else:
+                return None, None
+
+
     def clear(self):
         '''
         Clear / reset the track.
@@ -73,17 +124,21 @@ class Track:
             line.delete()
         for shape in self.track_shapes:
             shape.delete()
+        for shape in self.temp_shapes:
+            shape.delete()
 
         self.track_vertices = []
+        self.tmp_vertex = ()
         self.line_shapes = []
-        self.track_shapes= []
+        self.track_shapes = []
+        self.temp_shapes = []
 
     def save(self, filename):
         '''
         Save the track to a text file.
         '''
 
-        if len(self.track_vertices[-1]) == 2:
+        if self.tmp_vertex == ():
 
             # Convert 3D array into 2D array
             track_vertices = np.array(self.track_vertices)
