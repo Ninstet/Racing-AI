@@ -43,8 +43,8 @@ def on_key_press(symbol, modifiers):
     elif symbol == pyglet.window.key.RIGHT:
         pyglet.clock.schedule_interval(car.right, 1 / FPS)
     elif symbol == pyglet.window.key.SPACE:
-        track.create_track(track.track_vertices[0][0], track.track_vertices[0][1])
-        track.create_track(track.track_vertices[1][0], track.track_vertices[1][1])
+        track.create_track(track.track_vertices[0][0][0], track.track_vertices[0][0][1])
+        track.create_track(track.track_vertices[0][1][0], track.track_vertices[0][1][1])
     elif symbol == pyglet.window.key.S:
         track.save(input("Track name: "))
     elif symbol == pyglet.window.key.L:
