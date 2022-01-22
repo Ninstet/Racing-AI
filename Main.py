@@ -87,6 +87,7 @@ def on_draw():
             i.draw()
         for i in track.line_shapes:
             i.draw()
+
     if track.rays_visible:
         for i in track.temp_shapes:
             i.draw()

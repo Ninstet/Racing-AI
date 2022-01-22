@@ -59,24 +59,25 @@ class Car:
 
         self.track.temp_shapes = []
 
-        if self.has_collided(): self.reset()
+        self.check_sensors()
 
-        for i in np.arange(0, 180, 30)[1:]:
-            vector = np.array([np.cos(np.radians(i + self.bearing)), -np.sin(np.radians(i + self.bearing))])
-            self.track.get_intersections(self.pos, self.pos + vector)
-
-    def has_collided(self):
+    def check_sensors(self):
         '''
         Checks if the car has collided with any of the lines.
         '''
 
-        intersections, distances = self.track.get_intersections(self.pos, self.pos + self.displacement)
+        self.sensors = []
 
-        if distances[0] != None:
-            if distances[0] < 20:
-                return True
+        for i in np.arange(0, 180, 30):
+            vector = np.array([np.cos(np.radians(i + self.bearing)), -np.sin(np.radians(i + self.bearing))])
 
-        return False
+            intersections, distances = self.track.get_intersections(self.pos, self.pos + vector)
+
+            if distances[0] != None:
+                if distances[0] < 20:
+                    self.reset()
+
+                self.sensors.extend(distances)
 
     def reset(self):
         '''
@@ -91,6 +92,8 @@ class Car:
         self.speed = 0
         self.angular_speed = 0
         self.bearing = 0
+        
+        self.sensors = []
 
         self.sprite.position = self.pos
         self.sprite.rotation = self.bearing
