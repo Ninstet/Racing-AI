@@ -60,6 +60,11 @@ class Car:
         self.track.temp_shapes = []
 
         self.check_sensors()
+        distance = self.track.distance_to_reward_gate(self.pos, self.pos + self.displacement, self.target_reward_gate)
+
+        if distance != None:
+            if distance < 20:
+                self.target_reward_gate += 1
 
     def check_sensors(self):
         '''
@@ -94,6 +99,7 @@ class Car:
         self.bearing = 0
         
         self.sensors = []
+        self.target_reward_gate = 1
 
         self.sprite.position = self.pos
         self.sprite.rotation = self.bearing

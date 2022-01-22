@@ -106,6 +106,29 @@ class Track:
                 self.line_shapes.append(pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], old_pair[0][0], old_pair[0][1], 3, color=(0, 0, 0)))
                 self.line_shapes.append(pyglet.shapes.Line(new_pair[1][0], new_pair[1][1], old_pair[1][0], old_pair[1][1], 3, color=(0, 0, 0)))
 
+    def distance_to_reward_gate(self, a1, a2, gate):
+        '''
+        Returns the distance to a given reward gate along a particular vector.
+        '''
+
+        # If there is at least 1 pair of track vertices
+        if len(self.track_vertices) > 0:
+            track_vertices = np.array(self.track_vertices)
+
+            intersections, distances = self.compute_intersections(a1, a2, track_vertices[gate, :])
+
+            if len(distances) > 0:
+                self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], intersections[0][0], intersections[0][1], 2, color=(0, 0, 220)))
+                self.temp_shapes.append(pyglet.shapes.Circle(intersections[0][0], intersections[0][1], 5, color=(0, 0, 145)))
+
+                return distances[0]
+            
+            else:
+                return None
+        
+        else:
+            return None
+
     def get_intersections(self, a1, a2):
         '''
         Finds the positions and distances to the nearest intersection points along a line.
@@ -156,6 +179,9 @@ class Track:
 
             else:
                 return None
+
+        else:
+            return None
 
     def compute_intersections(self, a1, a2, lines):
         '''
