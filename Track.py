@@ -106,9 +106,9 @@ class Track:
                 self.line_shapes.append(pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], old_pair[0][0], old_pair[0][1], 3, color=(0, 0, 0)))
                 self.line_shapes.append(pyglet.shapes.Line(new_pair[1][0], new_pair[1][1], old_pair[1][0], old_pair[1][1], 3, color=(0, 0, 0)))
 
-    def distance_to_nearest_intersection(self, a1, a2):
+    def get_intersections(self, a1, a2):
         '''
-        Finds the distance to the nearest intersection point of an arbitrary line with any line on the track.
+        Finds the positions and distances to the nearest intersection points along a line.
         '''
 
         # If there is at least 1 pair of track vertices
@@ -116,8 +116,8 @@ class Track:
             track_vertices = np.array(self.track_vertices)
 
             # Calculate intersections and distances for inside and outside barriers of track
-            intersections_1, distances_1 = self.calculate_intersections(a1, a2, track_vertices[:, 0])
-            intersections_2, distances_2 = self.calculate_intersections(a1, a2, track_vertices[:, 1])
+            intersections_1, distances_1 = self.compute_intersections(a1, a2, track_vertices[:, 0])
+            intersections_2, distances_2 = self.compute_intersections(a1, a2, track_vertices[:, 1])
 
             # Combine intersections and distances
             intersections = intersections_1 + intersections_2
@@ -133,26 +133,31 @@ class Track:
                     sorted_intersections.append(map[1])
                     sorted_distances.append(map[0])
 
-                closest_points = [sorted_intersections[0]]
+                closest_intersections = [sorted_intersections[0]]
+                closest_distances = [sorted_distances[0]]
 
                 # Find intersection point that is opposite to the closest point
-                for P in sorted_intersections[1:]:
-                    if (closest_points[0][0] > a1[0] and P[0] < a1[0]) or (closest_points[0][1] > a1[1] and P[1] < a1[1]) or (closest_points[0][0] < a1[0] and P[0] > a1[0]) or (closest_points[0][1] < a1[1] and P[1] > a1[1]):
-                        closest_points.append(P)
+                for i in range(len(sorted_intersections) - 1):
+                    P = sorted_intersections[i + 1]
+
+                    if (closest_intersections[0][0] > a1[0] and P[0] < a1[0]) or (closest_intersections[0][1] > a1[1] and P[1] < a1[1]) or (closest_intersections[0][0] < a1[0] and P[0] > a1[0]) or (closest_intersections[0][1] < a1[1] and P[1] > a1[1]):
+                        closest_intersections.append(P)
+                        closest_distances.append(sorted_distances[i + 1])
+
                         break
 
                 # Draw intersection detection shapes
-                for P in closest_points:
+                for P in closest_intersections:
                     self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 220, 0)))
                     self.temp_shapes.append(pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0)))
 
                 # Return closest intersection distance
-                return sorted_distances[0]
+                return closest_intersections, closest_distances
 
             else:
                 return None
 
-    def calculate_intersections(self, a1, a2, lines):
+    def compute_intersections(self, a1, a2, lines):
         '''
         Calculates all intersection points between an arbitrary line with any line on the track.
         '''

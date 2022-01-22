@@ -1,5 +1,6 @@
 import pyglet
 import numpy as np
+from time import perf_counter
 
 ACCELERATION = 0.8
 ROTATION_SPEED = 30
@@ -62,17 +63,17 @@ class Car:
 
         for i in np.arange(0, 180, 30)[1:]:
             vector = np.array([np.cos(np.radians(i + self.bearing)), -np.sin(np.radians(i + self.bearing))])
-            self.track.distance_to_nearest_intersection(self.pos, self.pos + vector)
+            self.track.get_intersections(self.pos, self.pos + vector)
 
     def has_collided(self):
         '''
         Checks if the car has collided with any of the lines.
         '''
 
-        distance = self.track.distance_to_nearest_intersection(self.pos, self.pos + self.displacement)
+        intersections, distances = self.track.get_intersections(self.pos, self.pos + self.displacement)
 
-        if distance != None:
-            if distance < 20:
+        if distances[0] != None:
+            if distances[0] < 20:
                 return True
 
         return False
