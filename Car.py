@@ -61,6 +61,8 @@ class Car:
 
         self.check_sensors()
         distance = self.track.distance_to_reward_gate(self.pos, self.pos + self.displacement, self.target_reward_gate)
+        self.track.line_shapes[((self.target_reward_gate - 1) * 3) - 2].color = (255, 0, 0)
+        self.track.line_shapes[(self.target_reward_gate * 3) - 2].color = (0, 0, 255)
 
         if distance != None:
             if distance < 20:

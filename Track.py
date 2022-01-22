@@ -114,7 +114,7 @@ class Track:
         # If there is at least 1 pair of track vertices
         if len(self.track_vertices) > 0:
             track_vertices = np.array(self.track_vertices)
-
+ 
             intersections, distances = self.compute_intersections(a1, a2, track_vertices[gate, :])
 
             if len(distances) > 0:
@@ -191,12 +191,15 @@ class Track:
         intersections = []
         distances = []
 
+        # For all lines to compute intersections on
         for i in range(len(lines) - 1):
             b1 = lines[i]
             b2 = lines[i + 1]
 
+            # Calculate intersection based on 4 points on 2 lines
             P = seg_intersect(a1, a2, b1, b2)
 
+            # Find intersection points that lie on the line (not off the line)
             if P[0] != np.inf:
                 if P[0] > min(b1[0], b2[0]) and P[0] < max(b1[0], b2[0]) and P[1] > min(b1[1], b2[1]) and P[1] < max(b1[1], b2[1]):
                     intersections.append(P)
