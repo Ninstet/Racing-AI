@@ -1,6 +1,43 @@
+##################################################
+##################### IMPORTS ####################
+##################################################
+
 from dataclasses import asdict
 import pyglet
 import numpy as np
+from time import perf_counter
+
+
+
+##################################################
+#################### FUNCTIONS ###################
+##################################################
+
+def perp(a) :
+    b = np.empty_like(a)
+    b[0] = -a[1]
+    b[1] = a[0]
+    return b
+
+def seg_intersect(a1, a2, b1, b2) :
+    da = a2 - a1
+    db = b2 - b1
+    dp = a1 - b1
+
+    dap = perp(da)
+    denom = np.dot(dap, db)
+    num = np.dot(dap, dp)
+
+    if denom == 0:
+        return (np.inf, np.inf)
+    else:
+        return (num / denom.astype(float))*db + b1
+
+
+
+##################################################
+##################### CLASSES ####################
+##################################################
 
 class Track:
 
@@ -74,6 +111,7 @@ class Track:
         if len(self.track_vertices) > 0:
             track_vertices = np.array(self.track_vertices)
 
+            # 2 lines below take 0.8ms (was 5.4ms previously)
             intersections_1, distances_1 = self.calculate_intersections(a1, a2, track_vertices[:, 0])
             intersections_2, distances_2 = self.calculate_intersections(a1, a2, track_vertices[:, 1])
 
@@ -83,6 +121,7 @@ class Track:
             if len(distances) > 1:
                 P = intersections[distances.index(min(distances))]
 
+                # 2 lines below take 0.3ms
                 self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 255, 0)))
                 self.temp_shapes.append(pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0)))
 
@@ -103,26 +142,14 @@ class Track:
             b1 = lines[i]
             b2 = lines[i + 1]
 
-            s = np.vstack([a1, a2, b1, b2])
-            h = np.hstack((s, np.ones((4, 1))))
+            P = seg_intersect(a1, a2, b1, b2)
 
-            l1 = np.cross(h[0], h[1])
-            l2 = np.cross(h[2], h[3])
-
-            x, y, z = np.cross(l1, l2)
-
-            if z == 0: return [], []
-
-            Px = x / z
-            Py = y / z
-            P = np.array((Px, Py))
-
-            if Px > min(b1[0], b2[0]) and Px < max(b1[0], b2[0]) and Py > min(b1[1], b2[1]) and Py < max(b1[1], b2[1]):
-                intersections.append(P)
-                distances.append(np.sqrt(np.sum((P - a1)**2)))
+            if P[0] != np.inf:
+                if P[0] > min(b1[0], b2[0]) and P[0] < max(b1[0], b2[0]) and P[1] > min(b1[1], b2[1]) and P[1] < max(b1[1], b2[1]):
+                    intersections.append(P)
+                    distances.append(np.sqrt(np.sum((P - a1)**2)))
 
         return intersections, distances
-
 
     def clear(self):
         '''
