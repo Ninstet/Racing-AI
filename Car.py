@@ -53,10 +53,22 @@ class Car:
         self.vector.position = (self.pos[0], self.pos[1], self.pos[0] + self.velocity[0] * 10, self.pos[1] + self.velocity[1] * 10)
 
         # Collisions
+        for shape in self.track.temp_shapes:
+            shape.delete()
+
+        self.track.temp_shapes = []
+
         if self.has_collided(): self.reset()
 
+        # vector = np.array([np.cos(np.radians(i + self.bearing)), -np.sin(np.radians(i + self.bearing))])
+        # self.track.distance_to_nearest_intersection(self.pos, self.pos + vector)
+
     def has_collided(self):
-        distance = self.track.distance_to_intersection(self.pos, self.pos + self.displacement)
+        '''
+        Checks if the car has collided with any of the lines.
+        '''
+
+        distance = self.track.distance_to_nearest_intersection(self.pos, self.pos + self.displacement)
 
         if distance != None:
             if distance < 20:

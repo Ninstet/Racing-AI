@@ -66,54 +66,62 @@ class Track:
                 self.line_shapes.append(pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], old_pair[0][0], old_pair[0][1], 3, color=(0, 0, 0)))
                 self.line_shapes.append(pyglet.shapes.Line(new_pair[1][0], new_pair[1][1], old_pair[1][0], old_pair[1][1], 3, color=(0, 0, 0)))
 
-    def distance_to_intersection(self, a1, a2):
+    def distance_to_nearest_intersection(self, a1, a2):
         '''
-        Finds the distance to the intersection point of a line and any line in the track.
+        Finds the distance to the nearest intersection point of an arbitrary line with any line on the track.
         '''
 
         if len(self.track_vertices) > 0:
             track_vertices = np.array(self.track_vertices)
-            lines = np.concatenate((track_vertices[:, 0], track_vertices[:, 1]))
 
-            for shape in self.temp_shapes:
-                shape.delete()
+            intersections_1, distances_1 = self.calculate_intersections(a1, a2, track_vertices[:, 0])
+            intersections_2, distances_2 = self.calculate_intersections(a1, a2, track_vertices[:, 1])
 
-            self.temp_shapes = []
-            intersections = []
-            distances = []
+            intersections = intersections_1 + intersections_2
+            distances = distances_1 + distances_2
 
-            for i in range(len(lines) - 1):
-                b1 = lines[i]
-                b2 = lines[i + 1]
-
-                s = np.vstack([a1, a2, b1, b2])
-                h = np.hstack((s, np.ones((4, 1))))
-
-                l1 = np.cross(h[0], h[1])
-                l2 = np.cross(h[2], h[3])
-
-                x, y, z = np.cross(l1, l2)
-
-                if z == 0: return None
-
-                Px = x / z
-                Py = y / z
-                P = np.array((Px, Py))
-
-                if Px > min(b1[0], b2[0]) and Px < max(b1[0], b2[0]) and Py > min(b1[1], b2[1]) and Py < max(b1[1], b2[1]):
-                    intersections.append(P)
-                    distances.append(np.sqrt(np.sum((P - a1)**2)))
-                
-            if len(distances) > 0:
+            if len(distances) > 1:
                 P = intersections[distances.index(min(distances))]
 
                 self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 255, 0)))
                 self.temp_shapes.append(pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0)))
 
                 return min(distances)
-            
+
             else:
                 return None
+
+    def calculate_intersections(self, a1, a2, lines):
+        '''
+        Calculates all intersection points between an arbitrary line with any line on the track.
+        '''
+
+        intersections = []
+        distances = []
+
+        for i in range(len(lines) - 1):
+            b1 = lines[i]
+            b2 = lines[i + 1]
+
+            s = np.vstack([a1, a2, b1, b2])
+            h = np.hstack((s, np.ones((4, 1))))
+
+            l1 = np.cross(h[0], h[1])
+            l2 = np.cross(h[2], h[3])
+
+            x, y, z = np.cross(l1, l2)
+
+            if z == 0: return [], []
+
+            Px = x / z
+            Py = y / z
+            P = np.array((Px, Py))
+
+            if Px > min(b1[0], b2[0]) and Px < max(b1[0], b2[0]) and Py > min(b1[1], b2[1]) and Py < max(b1[1], b2[1]):
+                intersections.append(P)
+                distances.append(np.sqrt(np.sum((P - a1)**2)))
+
+        return intersections, distances
 
 
     def clear(self):
