@@ -3,9 +3,11 @@ import pyglet
 import numpy as np
 
 class Track:
+
     def __init__(self):
         self.track_vertices = []
         self.tmp_vertex = ()
+
         self.line_shapes = []
         self.track_shapes = []
         self.temp_shapes = []
@@ -92,8 +94,7 @@ class Track:
 
                 x, y, z = np.cross(l1, l2)
 
-                if z == 0:
-                    return (float('inf'), float('inf'))
+                if z == 0: return None
 
                 Px = x / z
                 Py = y / z
@@ -109,10 +110,10 @@ class Track:
                 self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 255, 0)))
                 self.temp_shapes.append(pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0)))
 
-                return P, min(distances)
+                return min(distances)
             
             else:
-                return None, None
+                return None
 
 
     def clear(self):

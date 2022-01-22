@@ -17,19 +17,14 @@ class Car:
         self.vector = vector
         self.track = track
 
-        self.displacement = np.array([1.0, 0.0])
-        self.velocity = np.array([0.0, 0.0])
-
-        self.speed = 0
-        self.angular_speed = 0
-        self.bearing = 0
-
         green_car_image = pyglet.resource.image('green_car.png')
         green_car_image.anchor_x = green_car_image.width // 2
         green_car_image.anchor_y = green_car_image.height // 2
 
         self.sprite = pyglet.sprite.Sprite(green_car_image, x=x, y=y)
         self.sprite.scale = 0.05
+
+        self.reset()
 
         pyglet.clock.schedule_interval(self.physics, 1 / FPS)
 
@@ -44,40 +39,47 @@ class Car:
         self.velocity *= self.friction # Lateral friction
         self.speed *= self.friction # Drag
 
-        self.sprite.x += self.velocity[0] # Update x position
-        self.sprite.y += self.velocity[1] # Update y position
+        self.pos += self.velocity
 
         # Steering
         self.bearing += self.angular_speed * abs(self.speed)**0.4
 
-        self.angular_speed *= self.friction
         self.displacement = np.array([np.cos(np.radians(self.bearing)), -np.sin(np.radians(self.bearing))]) # Normalise displacement vector
-
-        self.sprite.rotation = self.bearing # Update sprite orientation
+        self.angular_speed *= self.friction
 
         # Graphics
-        self.vector.position = (self.sprite.x, self.sprite.y, self.sprite.x + self.velocity[0] * 10, self.sprite.y + self.velocity[1] * 10)
+        self.sprite.position = self.pos
+        self.sprite.rotation = self.bearing
+        self.vector.position = (self.pos[0], self.pos[1], self.pos[0] + self.velocity[0] * 10, self.pos[1] + self.velocity[1] * 10)
 
         # Collisions
-        pos = np.array((self.sprite.x, self.sprite.y))
-        P, distance = self.track.distance_to_intersection(pos, pos + self.displacement)
+        if self.has_collided(): self.reset()
 
-        print(pos + self.displacement)
+    def has_collided(self):
+        distance = self.track.distance_to_intersection(self.pos, self.pos + self.displacement)
 
         if distance != None:
-            if distance < 10:
-                self.displacement = np.array([1.0, 0.0])
-                self.velocity = np.array([0.0, 0.0])
+            if distance < 20:
+                return True
 
-                self.speed = 0
-                self.angular_speed = 0
-                self.bearing = 0
+        return False
 
-                self.sprite.position = self.start_pos
-                self.sprite.rotation = self.bearing
+    def reset(self):
+        '''
+        Reset the cars position, velocity and displacement.
+        '''
 
-    # def has_collided(self):
+        self.pos = self.start_pos
         
+        self.displacement = np.array([1.0, 0.0])
+        self.velocity = np.array([0.0, 0.0])
+
+        self.speed = 0
+        self.angular_speed = 0
+        self.bearing = 0
+
+        self.sprite.position = self.pos
+        self.sprite.rotation = self.bearing
 
 
 
