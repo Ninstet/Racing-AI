@@ -118,14 +118,29 @@ class Track:
             intersections = intersections_1 + intersections_2
             distances = distances_1 + distances_2
 
-            if len(distances) > 1:
-                P = intersections[distances.index(min(distances))]
+            if len(distances) > 0:
+                sorted_zipped_array = np.array(sorted(zip(distances, intersections)), dtype=object)
 
-                # 2 lines below take 0.3ms
-                self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 255, 0)))
-                self.temp_shapes.append(pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0)))
+                sorted_intersections = sorted_zipped_array[:, 1]
+                sorted_distances = sorted_zipped_array[:, 0]
 
-                return min(distances)
+                P1 = sorted_intersections[0]
+                Ps = [P1]
+
+                for P in sorted_intersections[1:]:
+                    if P1[0] > a1[0] and P[0] < a1[0]:
+                        Ps.append(P)
+                        break
+                    if P1[1] > a1[1] and P[1] < a1[1]:
+                        Ps.append(P)
+                        break
+
+                for P in Ps:
+                    # 2 lines below take 0.3ms
+                    self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 255, 0)))
+                    self.temp_shapes.append(pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0)))
+
+                return sorted_distances[0]
 
             else:
                 return None
