@@ -60,8 +60,9 @@ class Car:
 
         if self.has_collided(): self.reset()
 
-        # vector = np.array([np.cos(np.radians(i + self.bearing)), -np.sin(np.radians(i + self.bearing))])
-        # self.track.distance_to_nearest_intersection(self.pos, self.pos + vector)
+        for i in np.arange(0, 180, 30)[1:]:
+            vector = np.array([np.cos(np.radians(i + self.bearing)), -np.sin(np.radians(i + self.bearing))])
+            self.track.distance_to_nearest_intersection(self.pos, self.pos + vector)
 
     def has_collided(self):
         '''

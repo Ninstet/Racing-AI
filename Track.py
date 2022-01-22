@@ -49,6 +49,8 @@ class Track:
         self.track_shapes = []
         self.temp_shapes = []
 
+        self.visible = True
+
     def __str__(self):
         return str(self.track_vertices)
 
@@ -108,6 +110,7 @@ class Track:
         Finds the distance to the nearest intersection point of an arbitrary line with any line on the track.
         '''
 
+        # If there is at least 1 pair of track vertices
         if len(self.track_vertices) > 0:
             track_vertices = np.array(self.track_vertices)
 
@@ -118,20 +121,20 @@ class Track:
             intersections = intersections_1 + intersections_2
             distances = distances_1 + distances_2
 
+            # If at least 1 intersection has been found
             if len(distances) > 0:
-                sorted_zipped_array = np.array(sorted(zip(distances, intersections)), dtype=object)
+                sorted_intersections = []
+                sorted_distances = []
 
-                sorted_intersections = sorted_zipped_array[:, 1]
-                sorted_distances = sorted_zipped_array[:, 0]
+                for map in sorted(zip(distances, intersections)):
+                    sorted_intersections.append(map[1])
+                    sorted_distances.append(map[0])
 
                 P1 = sorted_intersections[0]
                 Ps = [P1]
 
                 for P in sorted_intersections[1:]:
-                    if P1[0] > a1[0] and P[0] < a1[0]:
-                        Ps.append(P)
-                        break
-                    if P1[1] > a1[1] and P[1] < a1[1]:
+                    if (P1[0] > a1[0] and P[0] < a1[0]) or (P1[1] > a1[1] and P[1] < a1[1]) or (P1[0] < a1[0] and P[0] > a1[0]) or (P1[1] < a1[1] and P[1] > a1[1]):
                         Ps.append(P)
                         break
 

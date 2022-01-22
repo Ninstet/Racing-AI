@@ -51,6 +51,8 @@ def on_key_press(symbol, modifiers):
         track.load(input("Track name: "))
     elif symbol == pyglet.window.key.C:
         track.clear()
+    elif symbol == pyglet.window.key.V:
+        track.visible = not track.visible
 
 @window.event
 def on_key_release(symbol, modifiers):
@@ -78,10 +80,11 @@ def on_draw():
     window.clear()
     label.draw()
 
-    for i in track.track_shapes:
-        i.draw()
-    for i in track.line_shapes:
-        i.draw()
+    if track.visible:
+        for i in track.track_shapes:
+            i.draw()
+        for i in track.line_shapes:
+            i.draw()
     for i in track.temp_shapes:
         i.draw()
 
