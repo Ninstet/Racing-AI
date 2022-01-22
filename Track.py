@@ -49,7 +49,8 @@ class Track:
         self.track_shapes = []
         self.temp_shapes = []
 
-        self.visible = True
+        self.track_visible = True
+        self.rays_visible = True
 
     def __str__(self):
         return str(self.track_vertices)
@@ -114,10 +115,11 @@ class Track:
         if len(self.track_vertices) > 0:
             track_vertices = np.array(self.track_vertices)
 
-            # 2 lines below take 0.8ms (was 5.4ms previously)
+            # Calculate intersections and distances for inside and outside barriers of track
             intersections_1, distances_1 = self.calculate_intersections(a1, a2, track_vertices[:, 0])
             intersections_2, distances_2 = self.calculate_intersections(a1, a2, track_vertices[:, 1])
 
+            # Combine intersections and distances
             intersections = intersections_1 + intersections_2
             distances = distances_1 + distances_2
 
@@ -126,23 +128,25 @@ class Track:
                 sorted_intersections = []
                 sorted_distances = []
 
+                # Sort intersections and distances from smallest distance first
                 for map in sorted(zip(distances, intersections)):
                     sorted_intersections.append(map[1])
                     sorted_distances.append(map[0])
 
-                P1 = sorted_intersections[0]
-                Ps = [P1]
+                closest_points = [sorted_intersections[0]]
 
+                # Find intersection point that is opposite to the closest point
                 for P in sorted_intersections[1:]:
-                    if (P1[0] > a1[0] and P[0] < a1[0]) or (P1[1] > a1[1] and P[1] < a1[1]) or (P1[0] < a1[0] and P[0] > a1[0]) or (P1[1] < a1[1] and P[1] > a1[1]):
-                        Ps.append(P)
+                    if (closest_points[0][0] > a1[0] and P[0] < a1[0]) or (closest_points[0][1] > a1[1] and P[1] < a1[1]) or (closest_points[0][0] < a1[0] and P[0] > a1[0]) or (closest_points[0][1] < a1[1] and P[1] > a1[1]):
+                        closest_points.append(P)
                         break
 
-                for P in Ps:
-                    # 2 lines below take 0.3ms
-                    self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 255, 0)))
+                # Draw intersection detection shapes
+                for P in closest_points:
+                    self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 220, 0)))
                     self.temp_shapes.append(pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0)))
 
+                # Return closest intersection distance
                 return sorted_distances[0]
 
             else:

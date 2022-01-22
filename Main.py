@@ -51,8 +51,10 @@ def on_key_press(symbol, modifiers):
         track.load(input("Track name: "))
     elif symbol == pyglet.window.key.C:
         track.clear()
-    elif symbol == pyglet.window.key.V:
-        track.visible = not track.visible
+    elif symbol == pyglet.window.key.T:
+        track.track_visible = not track.track_visible
+    elif symbol == pyglet.window.key.R:
+        track.rays_visible = not track.rays_visible
 
 @window.event
 def on_key_release(symbol, modifiers):
@@ -80,13 +82,14 @@ def on_draw():
     window.clear()
     label.draw()
 
-    if track.visible:
+    if track.track_visible:
         for i in track.track_shapes:
             i.draw()
         for i in track.line_shapes:
             i.draw()
-    for i in track.temp_shapes:
-        i.draw()
+    if track.rays_visible:
+        for i in track.temp_shapes:
+            i.draw()
 
     car.draw()
     vector.draw()
