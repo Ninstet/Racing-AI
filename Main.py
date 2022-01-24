@@ -1,3 +1,7 @@
+##################################################
+##################### IMPORTS ####################
+##################################################
+
 import pyglet
 import numpy as np
 
@@ -32,8 +36,9 @@ class Window(pyglet.window.Window):
         if self.track.track_visible:
             for i in self.track.track_shapes:
                 i.draw()
-            for i in self.track.line_shapes:
-                i.draw()
+            # for i in self.track.line_shapes:
+            #     i.draw()
+            self.track.line_batch.draw()
 
         if self.track.rays_visible:
             for i in self.track.temp_shapes:

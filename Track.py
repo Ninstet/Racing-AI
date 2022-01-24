@@ -48,7 +48,9 @@ class Track:
         self.line_shapes = []
         self.line_batch = pyglet.graphics.Batch()
         self.track_shapes = []
+        self.track_batch = pyglet.graphics.Batch()
         self.temp_shapes = []
+        self.temp_batch = pyglet.graphics.Batch()
 
         self.track_visible = True
         self.rays_visible = True
@@ -85,7 +87,7 @@ class Track:
             # Draw reward line between two vertices
             new_pair = self.track_vertices[-1]
 
-            line = pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], new_pair[1][0], new_pair[1][1], 3, color=(255, 0, 0))
+            line = pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], new_pair[1][0], new_pair[1][1], 3, color=(255, 0, 0), batch=self.line_batch)
             line.opacity = 100
             self.line_shapes.append(line)
 
@@ -95,8 +97,8 @@ class Track:
                 # Draw joining track triangles
                 old_pair = self.track_vertices[-2]
 
-                shape_1 = pyglet.shapes.Triangle(new_pair[0][0], new_pair[0][1], new_pair[1][0], new_pair[1][1], old_pair[0][0], old_pair[0][1], color=(145, 145, 145))
-                shape_2 = pyglet.shapes.Triangle(new_pair[1][0], new_pair[1][1], old_pair[0][0], old_pair[0][1], old_pair[1][0], old_pair[1][1], color=(145, 145, 145))
+                shape_1 = pyglet.shapes.Triangle(new_pair[0][0], new_pair[0][1], new_pair[1][0], new_pair[1][1], old_pair[0][0], old_pair[0][1], color=(145, 145, 145), batch=self.track_batch)
+                shape_2 = pyglet.shapes.Triangle(new_pair[1][0], new_pair[1][1], old_pair[0][0], old_pair[0][1], old_pair[1][0], old_pair[1][1], color=(145, 145, 145), batch=self.track_batch)
                 shape_1.opacity = 100
                 shape_2.opacity = 120
 
@@ -104,8 +106,8 @@ class Track:
                 self.track_shapes.append(shape_2)
 
                 # Draw track edges
-                self.line_shapes.append(pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], old_pair[0][0], old_pair[0][1], 3, color=(0, 0, 0)))
-                self.line_shapes.append(pyglet.shapes.Line(new_pair[1][0], new_pair[1][1], old_pair[1][0], old_pair[1][1], 3, color=(0, 0, 0)))
+                self.line_shapes.append(pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], old_pair[0][0], old_pair[0][1], 3, color=(0, 0, 0), batch=self.line_batch))
+                self.line_shapes.append(pyglet.shapes.Line(new_pair[1][0], new_pair[1][1], old_pair[1][0], old_pair[1][1], 3, color=(0, 0, 0), batch=self.line_batch))
 
     def distance_to_reward_gate(self, a1, a2, gate):
         '''
@@ -119,13 +121,13 @@ class Track:
             intersections, distances = self.compute_intersections(a1, a2, track_vertices[gate % len(track_vertices), :])
 
             if len(distances) > 0:
-                self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], intersections[0][0], intersections[0][1], 2, color=(0, 0, 220)))
-                self.temp_shapes.append(pyglet.shapes.Circle(intersections[0][0], intersections[0][1], 5, color=(0, 0, 145)))
+                self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], intersections[0][0], intersections[0][1], 2, color=(0, 0, 220), batch=self.temp_batch))
+                self.temp_shapes.append(pyglet.shapes.Circle(intersections[0][0], intersections[0][1], 5, color=(0, 0, 145), batch=self.temp_batch))
 
                 self.line_shapes[((gate % len(track_vertices) - 1) * 3) - 2].color = (255, 0, 0)
                 self.line_shapes[(gate % len(track_vertices) * 3) - 2].color = (0, 0, 255)
 
-                self.temp_shapes.append(pyglet.text.Label("Track Vertices: " + str(len(self.track_vertices)), color=(0, 0, 0, 255), font_name='Times New Roman', font_size=16, x=800, y=50, anchor_x='center', anchor_y='center'))
+                self.temp_shapes.append(pyglet.text.Label("Track Vertices: " + str(len(self.track_vertices)), color=(0, 0, 0, 255), font_name='Times New Roman', font_size=16, x=800, y=50, anchor_x='center', anchor_y='center', batch=self.temp_batch))
 
                 return distances[0]
 
@@ -177,8 +179,8 @@ class Track:
 
                 # Draw intersection detection shapes
                 for P in closest_intersections:
-                    self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 220, 0)))
-                    self.temp_shapes.append(pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0)))
+                    self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], P[0], P[1], 2, color=(0, 220, 0), batch=self.temp_batch))
+                    self.temp_shapes.append(pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0), batch=self.temp_batch))
 
                 # Return closest intersection distance
                 return closest_intersections, closest_distances
@@ -230,9 +232,13 @@ class Track:
 
         self.track_vertices = []
         self.tmp_vertex = ()
+
         self.line_shapes = []
+        self.line_batch = pyglet.graphics.Batch()
         self.track_shapes = []
+        self.track_batch = pyglet.graphics.Batch()
         self.temp_shapes = []
+        self.temp_batch = pyglet.graphics.Batch()
 
     def save(self, filename):
         '''

@@ -1,3 +1,7 @@
+##################################################
+##################### IMPORTS ####################
+##################################################
+
 import pyglet
 import numpy as np
 from time import perf_counter
@@ -5,6 +9,12 @@ from time import perf_counter
 ACCELERATION = 0.8
 ROTATION_SPEED = 30
 FPS = 60
+
+
+
+##################################################
+##################### CLASSES ####################
+##################################################
 
 class Car:
 
@@ -85,7 +95,7 @@ class Car:
             if len(distances) > 0:
                 if distances[0] < 20:
                     if self.god == False:
-                        # self.track.line_shapes[(self.target_reward_gate % len(self.track.track_vertices) * 3) - 2].color = (255, 0, 0)
+                        self.track.line_shapes[(self.target_reward_gate % len(self.track.track_vertices) * 3) - 2].color = (255, 0, 0)
                         self.reset()
 
                 self.sensors.extend(distances)
