@@ -46,6 +46,7 @@ class Track:
         self.tmp_vertex = ()
 
         self.line_shapes = []
+        self.line_batch = pyglet.graphics.Batch()
         self.track_shapes = []
         self.temp_shapes = []
 
@@ -111,21 +112,26 @@ class Track:
         Returns the distance to a given reward gate along a particular vector.
         '''
 
-        # If there is at least 1 pair of track vertices
-        if len(self.track_vertices) > 0:
+        # If there is at least 2 pairs of track vertices
+        if len(self.track_vertices) > 1:
             track_vertices = np.array(self.track_vertices)
  
-            intersections, distances = self.compute_intersections(a1, a2, track_vertices[gate, :])
+            intersections, distances = self.compute_intersections(a1, a2, track_vertices[gate % len(track_vertices), :])
 
             if len(distances) > 0:
                 self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], intersections[0][0], intersections[0][1], 2, color=(0, 0, 220)))
                 self.temp_shapes.append(pyglet.shapes.Circle(intersections[0][0], intersections[0][1], 5, color=(0, 0, 145)))
 
+                self.line_shapes[((gate % len(track_vertices) - 1) * 3) - 2].color = (255, 0, 0)
+                self.line_shapes[(gate % len(track_vertices) * 3) - 2].color = (0, 0, 255)
+
+                self.temp_shapes.append(pyglet.text.Label("Track Vertices: " + str(len(self.track_vertices)), color=(0, 0, 0, 255), font_name='Times New Roman', font_size=16, x=800, y=50, anchor_x='center', anchor_y='center'))
+
                 return distances[0]
-            
+
             else:
                 return None
-        
+
         else:
             return None
 
@@ -178,15 +184,18 @@ class Track:
                 return closest_intersections, closest_distances
 
             else:
-                return None
+                return [], []
 
         else:
-            return None
+            return [], []
 
     def compute_intersections(self, a1, a2, lines):
         '''
         Calculates all intersection points between an arbitrary line with any line on the track.
         '''
+
+        if len(lines) < 1:
+            return [], []
 
         intersections = []
         distances = []

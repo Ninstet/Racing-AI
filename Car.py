@@ -8,15 +8,16 @@ FPS = 60
 
 class Car:
 
-    def __init__(self, x, y, friction, vector, track):
+    def __init__(self, x, y, friction, track):
         '''
         Initialises a car object which has physics and can detect collisions
         '''
 
         self.start_pos = (x, y)
         self.friction = friction
-        self.vector = vector
         self.track = track
+
+        self.god = False
 
         green_car_image = pyglet.resource.image('green_car.png')
         green_car_image.anchor_x = green_car_image.width // 2
@@ -24,6 +25,9 @@ class Car:
 
         self.sprite = pyglet.sprite.Sprite(green_car_image, x=x, y=y)
         self.sprite.scale = 0.05
+
+        self.vector = pyglet.shapes.Line(100, 100, 200, 200, 3, color=(250, 30, 30))
+        self.vector.opacity = 250
 
         self.reset()
 
@@ -61,8 +65,6 @@ class Car:
 
         self.check_sensors()
         distance = self.track.distance_to_reward_gate(self.pos, self.pos + self.displacement, self.target_reward_gate)
-        self.track.line_shapes[((self.target_reward_gate - 1) * 3) - 2].color = (255, 0, 0)
-        self.track.line_shapes[(self.target_reward_gate * 3) - 2].color = (0, 0, 255)
 
         if distance != None:
             if distance < 20:
@@ -80,9 +82,11 @@ class Car:
 
             intersections, distances = self.track.get_intersections(self.pos, self.pos + vector)
 
-            if distances[0] != None:
+            if len(distances) > 0:
                 if distances[0] < 20:
-                    self.reset()
+                    if self.god == False:
+                        # self.track.line_shapes[(self.target_reward_gate % len(self.track.track_vertices) * 3) - 2].color = (255, 0, 0)
+                        self.reset()
 
                 self.sensors.extend(distances)
 

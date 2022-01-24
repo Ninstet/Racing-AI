@@ -6,95 +6,97 @@ from Track import Track
 
 FPS = 60
 
-window = pyglet.window.Window(width=1280, height=720)
-label = pyglet.text.Label('Hello, World!', font_name='Times New Roman', font_size=36, x=window.width//2, y=window.height//2, anchor_x='center', anchor_y='center')
-
-track = Track()
-track.load("track_1")
-
-drag = pyglet.shapes.Line(0, 0, 0, 0, 3, color=(250, 30, 30))
-drag.opacity = 250
-
-# EVENTS
-
-@window.event
-def on_mouse_press(x, y, button, modifiers):
-    track.create_track(x, y)
-    drag.position = (x, y, x, y)
-
-@window.event
-def on_mouse_release(x, y, button, modifiers):
-    track.create_track(x, y)
-    drag.position = (0, 0, 0, 0)
-
-@window.event
-def on_mouse_drag(x, y, dx, dy, button, modifiers):
-    drag.x2 = x
-    drag.y2 = y
-
-@window.event
-def on_key_press(symbol, modifiers):
-    if symbol == pyglet.window.key.UP:
-        pyglet.clock.schedule_interval(car.forward, 1 / FPS)
-    elif symbol == pyglet.window.key.DOWN:
-        pyglet.clock.schedule_interval(car.backward, 1 / FPS)
-    elif symbol == pyglet.window.key.LEFT:
-        pyglet.clock.schedule_interval(car.left, 1 / FPS)
-    elif symbol == pyglet.window.key.RIGHT:
-        pyglet.clock.schedule_interval(car.right, 1 / FPS)
-    elif symbol == pyglet.window.key.SPACE:
-        track.create_track(track.track_vertices[0][0][0], track.track_vertices[0][0][1])
-        track.create_track(track.track_vertices[0][1][0], track.track_vertices[0][1][1])
-    elif symbol == pyglet.window.key.S:
-        track.save(input("Track name: "))
-    elif symbol == pyglet.window.key.L:
-        track.load(input("Track name: "))
-    elif symbol == pyglet.window.key.C:
-        track.clear()
-    elif symbol == pyglet.window.key.T:
-        track.track_visible = not track.track_visible
-    elif symbol == pyglet.window.key.R:
-        track.rays_visible = not track.rays_visible
-
-@window.event
-def on_key_release(symbol, modifiers):
-    if symbol == pyglet.window.key.UP:
-        pyglet.clock.unschedule(car.forward)
-    elif symbol == pyglet.window.key.DOWN:
-        pyglet.clock.unschedule(car.backward)
-    elif symbol == pyglet.window.key.LEFT:
-        pyglet.clock.unschedule(car.left)
-    elif symbol == pyglet.window.key.RIGHT:
-        pyglet.clock.unschedule(car.right)
 
 
+##################################################
+##################### CLASSES ####################
+##################################################
+
+class Window(pyglet.window.Window):
+
+    def __init__(self):
+        super(Window, self).__init__(width=1280, height=720)
+        self.set_visible()
+
+        self.track = Track()
+        self.track.load("track_1")
+
+        self.drag = pyglet.shapes.Line(0, 0, 0, 0, 3, color=(250, 30, 30))
+        self.drag.opacity = 250
+
+        self.car = Car(400, 200, 0.95, self.track)
+
+    def on_draw(self):
+        self.clear()
+
+        if self.track.track_visible:
+            for i in self.track.track_shapes:
+                i.draw()
+            for i in self.track.line_shapes:
+                i.draw()
+
+        if self.track.rays_visible:
+            for i in self.track.temp_shapes:
+                i.draw()
+
+        self.car.draw()
+        self.car.vector.draw()
+        self.drag.draw()
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        self.track.create_track(x, y)
+        self.drag.position = (x, y, x, y)
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        self.track.create_track(x, y)
+        self.drag.position = (0, 0, 0, 0)
+
+    def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
+        self.drag.x2 = x
+        self.drag.y2 = y
+
+    def on_key_press(self, symbol, modifiers):
+        if symbol == pyglet.window.key.UP:
+            pyglet.clock.schedule_interval(self.car.forward, 1 / FPS)
+        elif symbol == pyglet.window.key.DOWN:
+            pyglet.clock.schedule_interval(self.car.backward, 1 / FPS)
+        elif symbol == pyglet.window.key.LEFT:
+            pyglet.clock.schedule_interval(self.car.left, 1 / FPS)
+        elif symbol == pyglet.window.key.RIGHT:
+            pyglet.clock.schedule_interval(self.car.right, 1 / FPS)
+        elif symbol == pyglet.window.key.SPACE:
+            self.track.create_track(self.track.track_vertices[0][0][0], self.track.track_vertices[0][0][1])
+            self.track.create_track(self.track.track_vertices[0][1][0], self.track.track_vertices[0][1][1])
+        elif symbol == pyglet.window.key.S:
+            self.track.save(input("Track name: "))
+        elif symbol == pyglet.window.key.L:
+            self.track.load(input("Track name: "))
+        elif symbol == pyglet.window.key.C:
+            self.track.clear()
+            self.car.reset()
+        elif symbol == pyglet.window.key.T:
+            self.track.track_visible = not self.track.track_visible
+        elif symbol == pyglet.window.key.R:
+            self.track.rays_visible = not self.track.rays_visible
+        elif symbol == pyglet.window.key.G:
+            self.car.god = not self.car.god
+
+    def on_key_release(self, symbol, modifiers):
+        if symbol == pyglet.window.key.UP:
+            pyglet.clock.unschedule(self.car.forward)
+        elif symbol == pyglet.window.key.DOWN:
+            pyglet.clock.unschedule(self.car.backward)
+        elif symbol == pyglet.window.key.LEFT:
+            pyglet.clock.unschedule(self.car.left)
+        elif symbol == pyglet.window.key.RIGHT:
+            pyglet.clock.unschedule(self.car.right)
 
 
 
-# @window.event
-# def on_mouse_release(x, y, button, modifiers):
+##################################################
+###################### MAIN ######################
+##################################################
 
-vector = pyglet.shapes.Line(100, 100, 200, 200, 3, color=(250, 30, 30))
-vector.opacity = 250
-
-@window.event
-def on_draw():
-    window.clear()
-    label.draw()
-
-    if track.track_visible:
-        for i in track.track_shapes:
-            i.draw()
-        for i in track.line_shapes:
-            i.draw()
-
-    if track.rays_visible:
-        for i in track.temp_shapes:
-            i.draw()
-
-    car.draw()
-    vector.draw()
-    drag.draw()
-
-car = Car(400, 200, 0.95, vector, track)
-pyglet.app.run()
+if __name__ == '__main__':
+    window = Window()
+    pyglet.app.run()
