@@ -115,19 +115,17 @@ class Track:
         '''
 
         # If there is at least 2 pairs of track vertices
-        if len(self.track_vertices) > 1:
+        if len(self.track_vertices) > 2:
             track_vertices = np.array(self.track_vertices)
  
-            intersections, distances = self.compute_intersections(a1, a2, track_vertices[gate % len(track_vertices), :])
+            intersections, distances = self.compute_intersections(a1, a2, track_vertices[gate % (len(track_vertices) - 1), :])
 
             if len(distances) > 0:
                 self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], intersections[0][0], intersections[0][1], 2, color=(0, 0, 220), batch=self.temp_batch))
                 self.temp_shapes.append(pyglet.shapes.Circle(intersections[0][0], intersections[0][1], 5, color=(0, 0, 145), batch=self.temp_batch))
 
-                self.line_shapes[((gate % len(track_vertices) - 1) * 3) - 2].color = (255, 0, 0)
-                self.line_shapes[(gate % len(track_vertices) * 3) - 2].color = (0, 0, 255)
-
-                self.temp_shapes.append(pyglet.text.Label("Track Vertices: " + str(len(self.track_vertices)), color=(0, 0, 0, 255), font_name='Times New Roman', font_size=16, x=800, y=50, anchor_x='center', anchor_y='center', batch=self.temp_batch))
+                self.line_shapes[(((gate - 1) % (len(track_vertices) - 1)) * 3) + 1].color = (255, 0, 0)
+                self.line_shapes[(( gate      % (len(track_vertices) - 1)) * 3) + 1].color = (0, 0, 255)
 
                 return distances[0]
 

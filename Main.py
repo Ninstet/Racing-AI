@@ -47,6 +47,8 @@ class Window(pyglet.window.Window):
         self.car.draw()
         self.car.vector.draw()
         self.drag.draw()
+        
+        pyglet.text.Label("Track Vertices: " + str(len(self.track.track_vertices)), color=(0, 0, 0, 255), font_name='Times New Roman', font_size=16, x=800, y=50, anchor_x='center', anchor_y='center').draw()
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.track.create_track(x, y)
