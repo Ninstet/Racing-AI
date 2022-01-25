@@ -45,10 +45,12 @@ class Track:
         self.track_vertices = []
         self.tmp_vertex = ()
 
-        self.line_shapes = []
-        self.line_batch = pyglet.graphics.Batch()
-        self.track_shapes = []
-        self.track_batch = pyglet.graphics.Batch()
+        self.wall_shapes = []
+        self.wall_batch = pyglet.graphics.Batch()
+        self.gate_shapes = []
+        self.gate_batch = pyglet.graphics.Batch()
+        self.road_shapes = []
+        self.road_batch = pyglet.graphics.Batch()
         self.temp_shapes = []
         self.temp_batch = pyglet.graphics.Batch()
 
@@ -87,51 +89,61 @@ class Track:
             # Draw reward line between two vertices
             new_pair = self.track_vertices[-1]
 
-            line = pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], new_pair[1][0], new_pair[1][1], 3, color=(255, 0, 0), batch=self.line_batch)
+            line = pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], new_pair[1][0], new_pair[1][1], 3, color=(255, 0, 0), batch=self.gate_batch)
             line.opacity = 100
-            self.line_shapes.append(line)
+            self.gate_shapes.append(line)
 
             # If this is not the first reward line
-            if len(self.line_shapes) > 1:
+            if len(self.gate_shapes) > 1:
+
+                # If new pair is original pair, delete the duplicate gate
+                if new_pair == self.track_vertices[0]:
+                    self.gate_shapes.pop()
 
                 # Draw joining track triangles
                 old_pair = self.track_vertices[-2]
 
-                shape_1 = pyglet.shapes.Triangle(new_pair[0][0], new_pair[0][1], new_pair[1][0], new_pair[1][1], old_pair[0][0], old_pair[0][1], color=(145, 145, 145), batch=self.track_batch)
-                shape_2 = pyglet.shapes.Triangle(new_pair[1][0], new_pair[1][1], old_pair[0][0], old_pair[0][1], old_pair[1][0], old_pair[1][1], color=(145, 145, 145), batch=self.track_batch)
+                shape_1 = pyglet.shapes.Triangle(new_pair[0][0], new_pair[0][1], new_pair[1][0], new_pair[1][1], old_pair[0][0], old_pair[0][1], color=(145, 145, 145), batch=self.road_batch)
+                shape_2 = pyglet.shapes.Triangle(new_pair[1][0], new_pair[1][1], old_pair[0][0], old_pair[0][1], old_pair[1][0], old_pair[1][1], color=(145, 145, 145), batch=self.road_batch)
                 shape_1.opacity = 100
                 shape_2.opacity = 120
 
-                self.track_shapes.append(shape_1)
-                self.track_shapes.append(shape_2)
+                self.road_shapes.append(shape_1)
+                self.road_shapes.append(shape_2)
 
                 # Draw track edges
-                self.line_shapes.append(pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], old_pair[0][0], old_pair[0][1], 3, color=(0, 0, 0), batch=self.line_batch))
-                self.line_shapes.append(pyglet.shapes.Line(new_pair[1][0], new_pair[1][1], old_pair[1][0], old_pair[1][1], 3, color=(0, 0, 0), batch=self.line_batch))
+                self.wall_shapes.append(pyglet.shapes.Line(new_pair[0][0], new_pair[0][1], old_pair[0][0], old_pair[0][1], 3, color=(0, 0, 0), batch=self.wall_batch))
+                self.wall_shapes.append(pyglet.shapes.Line(new_pair[1][0], new_pair[1][1], old_pair[1][0], old_pair[1][1], 3, color=(0, 0, 0), batch=self.wall_batch))
+
 
     def distance_to_reward_gate(self, a1, a2, gate):
         '''
         Returns the distance to a given reward gate along a particular vector.
         '''
 
-        # If there is at least 2 pairs of track vertices
-        if len(self.track_vertices) > 2:
+        # If there is at least 1 pair of track vertices
+        if len(self.track_vertices) > 1:
             track_vertices = np.array(self.track_vertices)
  
-            intersections, distances = self.compute_intersections(a1, a2, track_vertices[gate % (len(track_vertices) - 1), :])
+            # Calculate intersections and distances to the reward gates
+            intersections, distances = self.compute_intersections(a1, a2, track_vertices[(gate + 1) % len(track_vertices), :])
 
+            # Update shape colours to indicate next reward gate
+            self.gate_shapes[gate % len(self.gate_shapes)].color = (255, 0, 0)
+            self.gate_shapes[(gate + 1) % len(self.gate_shapes)].color = (0, 0, 255)
+
+            # If there is at least 1 reward gate
             if len(distances) > 0:
                 self.temp_shapes.append(pyglet.shapes.Line(a1[0], a1[1], intersections[0][0], intersections[0][1], 2, color=(0, 0, 220), batch=self.temp_batch))
                 self.temp_shapes.append(pyglet.shapes.Circle(intersections[0][0], intersections[0][1], 5, color=(0, 0, 145), batch=self.temp_batch))
 
-                self.line_shapes[(((gate - 1) % (len(track_vertices) - 1)) * 3) + 1].color = (255, 0, 0)
-                self.line_shapes[(( gate      % (len(track_vertices) - 1)) * 3) + 1].color = (0, 0, 255)
-
                 return distances[0]
 
+            # No reward gates
             else:
                 return None
 
+        # Less than 1 pair of track vertices
         else:
             return None
 
@@ -194,8 +206,7 @@ class Track:
         Calculates all intersection points between an arbitrary line with any line on the track.
         '''
 
-        if len(lines) < 1:
-            return [], []
+        if len(lines) < 1: return [], []
 
         intersections = []
         distances = []
@@ -221,9 +232,11 @@ class Track:
         Clear / reset the track.
         '''
 
-        for line in self.line_shapes:
-            line.delete()
-        for shape in self.track_shapes:
+        for shape in self.wall_shapes:
+            shape.delete()
+        for shape in self.gate_shapes:
+            shape.delete()
+        for shape in self.road_shapes:
             shape.delete()
         for shape in self.temp_shapes:
             shape.delete()
@@ -231,10 +244,12 @@ class Track:
         self.track_vertices = []
         self.tmp_vertex = ()
 
-        self.line_shapes = []
-        self.line_batch = pyglet.graphics.Batch()
-        self.track_shapes = []
-        self.track_batch = pyglet.graphics.Batch()
+        self.wall_shapes = []
+        self.wall_batch = pyglet.graphics.Batch()
+        self.gate_shapes = []
+        self.gate_batch = pyglet.graphics.Batch()
+        self.road_shapes = []
+        self.road_batch = pyglet.graphics.Batch()
         self.temp_shapes = []
         self.temp_batch = pyglet.graphics.Batch()
 

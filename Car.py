@@ -95,7 +95,8 @@ class Car:
             if len(distances) > 0:
                 if distances[0] < 20:
                     if self.god == False:
-                        self.track.line_shapes[(self.target_reward_gate % len(self.track.track_vertices) * 3) + 1].color = (255, 0, 0)
+                        for shape in self.track.gate_shapes:
+                            shape.color = (255, 0, 0)
                         self.reset()
 
                 self.sensors.extend(distances)
@@ -115,7 +116,7 @@ class Car:
         self.bearing = 0
         
         self.sensors = []
-        self.target_reward_gate = 1
+        self.target_reward_gate = 0
 
         self.sprite.position = self.pos
         self.sprite.rotation = self.bearing

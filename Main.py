@@ -4,6 +4,8 @@
 
 import pyglet
 import numpy as np
+# pyglet.options['audio'] = ('openal', 'pulse', 'directsound', 'silent')
+# import pyglet.media
 
 from Car import Car
 from Track import Track
@@ -34,21 +36,18 @@ class Window(pyglet.window.Window):
         self.clear()
 
         if self.track.track_visible:
-            for i in self.track.track_shapes:
-                i.draw()
-            # for i in self.track.line_shapes:
-            #     i.draw()
-            self.track.line_batch.draw()
+            self.track.road_batch.draw()
+            self.track.wall_batch.draw()
+            self.track.gate_batch.draw()
 
         if self.track.rays_visible:
-            for i in self.track.temp_shapes:
-                i.draw()
+            self.track.temp_batch.draw()
 
         self.car.draw()
         self.car.vector.draw()
         self.drag.draw()
         
-        pyglet.text.Label("Track Vertices: " + str(len(self.track.track_vertices)), color=(0, 0, 0, 255), font_name='Times New Roman', font_size=16, x=800, y=50, anchor_x='center', anchor_y='center').draw()
+        pyglet.text.Label(f"Score: {str(self.car.target_reward_gate)}", color=(0, 0, 0, 255), font_name='Arial', font_size=16, x=1150, y=50, anchor_x='center', anchor_y='center').draw()
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.track.create_track(x, y)
