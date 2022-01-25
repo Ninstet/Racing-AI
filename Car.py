@@ -99,7 +99,7 @@ class Car:
                             shape.color = (255, 0, 0)
                         self.reset()
 
-                self.sensors.extend(distances)
+            self.sensors.extend(distances)
 
     def reset(self):
         '''
@@ -135,11 +135,11 @@ class Car:
         else:
             self.speed -= ACCELERATION * dt
 
-    def right(self, dt):
-        self.angular_speed += ROTATION_SPEED * dt
-
     def left(self, dt):
         self.angular_speed -= ROTATION_SPEED * dt
+
+    def right(self, dt):
+        self.angular_speed += ROTATION_SPEED * dt
 
 
 
