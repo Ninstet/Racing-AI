@@ -74,12 +74,14 @@ class Car:
 
         self.track.temp_shapes = []
 
-        self.check_sensors()
+        collision = self.check_sensors()
         distance = self.track.distance_to_reward_gate(self.pos, self.pos + self.displacement, self.target_reward_gate)
 
         if distance != None:
             if distance < 15:
                 self.target_reward_gate += 1
+
+        return collision
 
     def check_sensors(self):
         '''
@@ -97,8 +99,12 @@ class Car:
                             shape.color = (255, 0, 0)
                         self.reset()
 
+                        return True
+
             self.sensors[2 * (i // 30)] = distances[0]
             self.sensors[(2 * (i // 30)) + 1] = distances[1]
+
+        return False
 
     def reset(self):
         '''
