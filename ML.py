@@ -1,3 +1,4 @@
+from operator import truediv
 import gym
 
 import numpy as np
@@ -5,25 +6,32 @@ import random
 import time
 from tqdm import tqdm
 
+import pyglet
+
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
 
 from collections import deque
 
+from Car import Car
+from Track import Track
 
 
-class Environment:
-    def __init__(self, car):
-        self.car = car
 
-        self.action_space_n = 4
-        self.observation_space_size = len(car.sensors)
+class Environment(gym.Env):
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self):
+        self.car = Car(400, 200, 0.95, Track("track_1"))
+
+        self.action_space = gym.spaces.Discrete(5)
+        self.observation_space = gym.spaces.Box(low=15, high=500, shape=(len(self.car.sensors),))
 
         self.delay = 0.02
-    
+
     def sample(self):
-        return random.randint(0, 3)
+        return random.randint(0, 4)
 
     def step(self, action):
         if action == 0:
@@ -37,26 +45,36 @@ class Environment:
         elif action == 4:
             self.car.right(self.delay)
 
-        self.car.physics()
+        self.car.physics(self.delay)
 
+        state = self.car.sensors
+        reward = self.car.target_reward_gate
+        done = False
+        info = []
+ 
+        return state, reward, done, info
+
+    def reset(self):
+        self.car.reset()
+        
         return self.car.sensors
 
 
 
 class DQN:
     def __init__(self, env):
-        self.env     = env
-        self.memory  = deque(maxlen=2000)
+        self.env            = env
+        self.memory         = deque(maxlen=2000)
         
-        self.gamma = 0.85 # Future rewards depreciation factor (< 1)
-        self.epsilon = 1.0 # Exploration vs. exploitation factor (the fraction of time we will dedicate to exploring)
-        self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
-        self.learning_rate = 0.005 # Standard learning rate parameter
-        self.tau = 0.125
+        self.gamma          = 0.85  # Future rewards depreciation factor (< 1)
+        self.epsilon        = 1.0   # Exploration vs. exploitation factor (the fraction of time we will dedicate to exploring)
+        self.epsilon_min    = 0.01
+        self.epsilon_decay  = 0.995
+        self.learning_rate  = 0.005 # Standard learning rate parameter
+        self.tau            = 0.125
 
-        self.model        = self.create_model()
-        self.target_model = self.create_model() # "hack" implemented by DeepMind to improve convergence
+        self.model          = self.create_model()
+        self.target_model   = self.create_model() # "hack" implemented by DeepMind to improve convergence
 
     def create_model(self):
         '''
