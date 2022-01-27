@@ -40,6 +40,7 @@ class Car:
         self.vector.opacity = 250
 
         self.reset()
+        self.check_sensors()
 
         pyglet.clock.schedule_interval(self.physics, 1 / FPS)
 
@@ -77,29 +78,27 @@ class Car:
         distance = self.track.distance_to_reward_gate(self.pos, self.pos + self.displacement, self.target_reward_gate)
 
         if distance != None:
-            if distance < 20:
+            if distance < 15:
                 self.target_reward_gate += 1
 
     def check_sensors(self):
         '''
         Checks if the car has collided with any of the lines.
         '''
-
-        self.sensors = []
-
         for i in np.arange(0, 180, 30):
             vector = np.array([np.cos(np.radians(i + self.bearing)), -np.sin(np.radians(i + self.bearing))])
 
             intersections, distances = self.track.get_intersections(self.pos, self.pos + vector)
 
             if len(distances) > 0:
-                if distances[0] < 20:
+                if distances[0] < 15:
                     if self.god == False:
                         for shape in self.track.gate_shapes:
                             shape.color = (255, 0, 0)
                         self.reset()
 
-            self.sensors.extend(distances)
+            self.sensors[2 * (i // 30)] = distances[0]
+            self.sensors[(2 * (i // 30)) + 1] = distances[1]
 
     def reset(self):
         '''
@@ -115,7 +114,7 @@ class Car:
         self.angular_speed = 0
         self.bearing = 0
         
-        self.sensors = []
+        self.sensors = np.zeros(2 * (180 // 30))
         self.target_reward_gate = 0
 
         self.sprite.position = self.pos
