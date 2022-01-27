@@ -45,11 +45,11 @@ class Environment(gym.Env):
         elif action == 4:
             self.car.right(self.delay)
 
-        self.car.physics(self.delay)
+        collision = self.car.physics(self.delay)
 
         state = self.car.sensors
-        reward = self.car.target_reward_gate
-        done = False
+        reward = -100 if collision else self.car.target_reward_gate
+        done = collision
         info = []
  
         return state, reward, done, info
@@ -164,36 +164,44 @@ class DQN:
 
 
 def main():
-    env     = gym.make("MountainCar-v0")
+    env     = Environment() #gym.make("MountainCar-v0")
     gamma   = 0.9
     epsilon = .95
 
     trials  = 1000
-    trial_len = 500
+    trial_len = 3000
 
     # updateTargetNetwork = 1000
     dqn_agent = DQN(env=env)
     steps = []
+
     for trial in range(trials):
-        cur_state = env.reset().reshape(1,2)
+
+        cur_state = env.reset().reshape(1, 12)
+
         for step in tqdm(range(trial_len)):
+
             action = dqn_agent.act(cur_state)
             new_state, reward, done, _ = env.step(action)
 
             # reward = reward if not done else -20
-            new_state = new_state.reshape(1,2)
+            new_state = new_state.reshape(1, 12)
             dqn_agent.remember(cur_state, action, reward, new_state, done)
             
-            dqn_agent.replay()       # internally iterates default (prediction) model
+            dqn_agent.replay()       # internally iterates default (prediction) model    (2.5 seconds)
             dqn_agent.target_train() # iterates target model
 
             cur_state = new_state
-            if done:
-                break
+
+            if done: break
+
+            print(action)
+
         if step >= 199:
             print("Failed to complete in trial {}".format(trial))
             if step % 10 == 0:
                 dqn_agent.save_model("trial-{}.model".format(trial))
+
         else:
             print("Completed in {} trials".format(trial))
             dqn_agent.save_model("success.model")
