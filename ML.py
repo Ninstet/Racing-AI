@@ -195,8 +195,6 @@ def main():
 
             if done: break
 
-            print(action)
-
         if step >= 199:
             print("Failed to complete in trial {}".format(trial))
             if step % 10 == 0:
