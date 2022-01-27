@@ -41,7 +41,7 @@ def seg_intersect(a1, a2, b1, b2) :
 
 class Track:
 
-    def __init__(self):
+    def __init__(self, track=None):
         self.track_vertices = []
         self.tmp_vertex = ()
 
@@ -56,6 +56,8 @@ class Track:
 
         self.track_visible = True
         self.rays_visible = True
+
+        if track != None: self.load(track)
 
     def __str__(self):
         return str(self.track_vertices)
