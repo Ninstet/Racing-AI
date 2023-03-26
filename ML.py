@@ -1,3 +1,7 @@
+##################################################
+##################### IMPORTS ####################
+##################################################
+
 from operator import truediv
 import gym
 
@@ -19,44 +23,54 @@ from Track import Track
 
 
 
+FPS = 30
+
+
+
+##################################################
+##################### CLASSES ####################
+##################################################
+
 class Environment(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
         self.car = Car(400, 200, 0.95, Track("track_1"))
 
-        self.action_space = gym.spaces.Discrete(5)
+        self.action_space = gym.spaces.Discrete(3)
         self.observation_space = gym.spaces.Box(low=15, high=500, shape=(len(self.car.sensors),))
 
-        self.delay = 0.02
+        self.delay = 1 / FPS
 
     def sample(self):
-        return random.randint(0, 4)
+        return random.randint(0, 2)
 
     def step(self, action):
+        # if action == 0:
+        #     time.sleep(self.delay)
         if action == 0:
-            time.sleep(self.delay)
-        elif action == 1:
             self.car.forward(self.delay)
-        elif action == 2:
-            self.car.backward(self.delay)
-        elif action == 3:
+        # elif action == 2:
+        #     self.car.backward(self.delay)
+        elif action == 1:
             self.car.left(self.delay)
-        elif action == 4:
+        elif action == 2:
             self.car.right(self.delay)
+
+        old_target_reward_gate = self.car.target_reward_gate
 
         collision = self.car.physics(self.delay)
 
         state = self.car.sensors
-        reward = -100 if collision else self.car.target_reward_gate
+        reward = -100 if collision else (self.car.target_reward_gate - old_target_reward_gate)
         done = collision
         info = []
- 
+
         return state, reward, done, info
 
     def reset(self):
         self.car.reset()
-        
+
         return self.car.sensors
 
 
@@ -159,9 +173,9 @@ class DQN:
 
 
 
-
-
-
+##################################################
+###################### MAIN ######################
+##################################################
 
 def main():
     env     = Environment() #gym.make("MountainCar-v0")
@@ -169,7 +183,7 @@ def main():
     epsilon = .95
 
     trials  = 1000
-    trial_len = 3000
+    trial_len = 1000
 
     # updateTargetNetwork = 1000
     dqn_agent = DQN(env=env)
@@ -178,8 +192,10 @@ def main():
     for trial in range(trials):
 
         cur_state = env.reset().reshape(1, 12)
+        total_reward = 0
 
-        for step in tqdm(range(trial_len)):
+        progress_bar = tqdm(range(trial_len), desc="Reached Gate " + str(env.car.target_reward_gate))
+        for step in progress_bar:
 
             action = dqn_agent.act(cur_state)
             new_state, reward, done, _ = env.step(action)
@@ -187,7 +203,7 @@ def main():
             # reward = reward if not done else -20
             new_state = new_state.reshape(1, 12)
             dqn_agent.remember(cur_state, action, reward, new_state, done)
-            
+
             dqn_agent.replay()       # internally iterates default (prediction) model    (2.5 seconds)
             dqn_agent.target_train() # iterates target model
 
@@ -195,13 +211,16 @@ def main():
 
             if done: break
 
-        if step >= 199:
-            print("Failed to complete in trial {}".format(trial))
+            total_reward += reward
+            progress_bar.desc=f"Reached Gate {str(env.car.target_reward_gate)} ({action})"
+
+        if env.car.target_reward_gate <= len(env.car.track.gate_shapes):
+            print(f"Failed to complete in trial {trial}, total reward is {total_reward}.")
             if step % 10 == 0:
-                dqn_agent.save_model("trial-{}.model".format(trial))
+                dqn_agent.save_model(f"trial-{trial}.model")
 
         else:
-            print("Completed in {} trials".format(trial))
+            print(f"Completed in {trial} trials.")
             dqn_agent.save_model("success.model")
             break
 

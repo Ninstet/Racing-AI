@@ -10,7 +10,9 @@ import numpy as np
 from Car import Car
 from Track import Track
 
-FPS = 60
+
+
+FPS = 30
 
 
 
