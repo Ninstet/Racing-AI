@@ -72,126 +72,131 @@ class Track:
         Updates the shapes based on the most recent vertex.
         """
 
-        # If the pair of vertices is complete
-        if self.tmp_vertex == ():
-            # Draw reward line between two vertices
-            new_pair = self.track_vertices[-1]
+        # Check the pair of vertices is complete
+        if self.tmp_vertex != ():
+            return
 
-            line = pyglet.shapes.Line(
+        # Draw reward line between two vertices
+        new_pair = self.track_vertices[-1]
+
+        line = pyglet.shapes.Line(
+            new_pair[0][0],
+            new_pair[0][1],
+            new_pair[1][0],
+            new_pair[1][1],
+            3,
+            color=(255, 0, 0),
+        )
+        line.opacity = 100
+        self.line_shapes.append(line)
+
+        # Check this is not the first reward line
+        if len(self.line_shapes) <= 1:
+            return
+
+        # Draw joining track triangles
+        old_pair = self.track_vertices[-2]
+
+        shape_1 = pyglet.shapes.Triangle(
+            new_pair[0][0],
+            new_pair[0][1],
+            new_pair[1][0],
+            new_pair[1][1],
+            old_pair[0][0],
+            old_pair[0][1],
+            color=(145, 145, 145),
+        )
+        shape_2 = pyglet.shapes.Triangle(
+            new_pair[1][0],
+            new_pair[1][1],
+            old_pair[0][0],
+            old_pair[0][1],
+            old_pair[1][0],
+            old_pair[1][1],
+            color=(145, 145, 145),
+        )
+        shape_1.opacity = 100
+        shape_2.opacity = 120
+
+        self.track_shapes.append(shape_1)
+        self.track_shapes.append(shape_2)
+
+        # Draw track edges
+        self.line_shapes.append(
+            pyglet.shapes.Line(
                 new_pair[0][0],
                 new_pair[0][1],
+                old_pair[0][0],
+                old_pair[0][1],
+                3,
+                color=(0, 0, 0),
+            )
+        )
+        self.line_shapes.append(
+            pyglet.shapes.Line(
                 new_pair[1][0],
                 new_pair[1][1],
+                old_pair[1][0],
+                old_pair[1][1],
                 3,
-                color=(255, 0, 0),
+                color=(0, 0, 0),
             )
-            line.opacity = 100
-            self.line_shapes.append(line)
-
-            # If this is not the first reward line
-            if len(self.line_shapes) > 1:
-                # Draw joining track triangles
-                old_pair = self.track_vertices[-2]
-
-                shape_1 = pyglet.shapes.Triangle(
-                    new_pair[0][0],
-                    new_pair[0][1],
-                    new_pair[1][0],
-                    new_pair[1][1],
-                    old_pair[0][0],
-                    old_pair[0][1],
-                    color=(145, 145, 145),
-                )
-                shape_2 = pyglet.shapes.Triangle(
-                    new_pair[1][0],
-                    new_pair[1][1],
-                    old_pair[0][0],
-                    old_pair[0][1],
-                    old_pair[1][0],
-                    old_pair[1][1],
-                    color=(145, 145, 145),
-                )
-                shape_1.opacity = 100
-                shape_2.opacity = 120
-
-                self.track_shapes.append(shape_1)
-                self.track_shapes.append(shape_2)
-
-                # Draw track edges
-                self.line_shapes.append(
-                    pyglet.shapes.Line(
-                        new_pair[0][0],
-                        new_pair[0][1],
-                        old_pair[0][0],
-                        old_pair[0][1],
-                        3,
-                        color=(0, 0, 0),
-                    )
-                )
-                self.line_shapes.append(
-                    pyglet.shapes.Line(
-                        new_pair[1][0],
-                        new_pair[1][1],
-                        old_pair[1][0],
-                        old_pair[1][1],
-                        3,
-                        color=(0, 0, 0),
-                    )
-                )
+        )
 
     def distance_to_nearest_intersection(self, a1, a2):
         """
         Finds the distance to the nearest intersection point of an arbitrary line with any line on the track.
         """
 
-        if len(self.track_vertices) > 0:
-            track_vertices = np.array(self.track_vertices)
+        if len(self.track_vertices) == 0:
+            return None
 
-            # 2 lines below take 0.8ms (was 5.4ms previously)
-            intersections_1, distances_1 = self.calculate_intersections(
-                a1, a2, track_vertices[:, 0]
-            )
-            intersections_2, distances_2 = self.calculate_intersections(
-                a1, a2, track_vertices[:, 1]
-            )
+        track_vertices = np.array(self.track_vertices)
 
-            intersections = intersections_1 + intersections_2
-            distances = distances_1 + distances_2
+        # 2 lines below take 0.8ms (was 5.4ms previously)
+        intersections_1, distances_1 = self.calculate_intersections(
+            a1, a2, track_vertices[:, 0]
+        )
+        intersections_2, distances_2 = self.calculate_intersections(
+            a1, a2, track_vertices[:, 1]
+        )
 
-            if len(distances) > 0:
-                sorted_zipped_array = np.array(
-                    sorted(zip(distances, intersections)), dtype=object
+        intersections = intersections_1 + intersections_2
+        distances = distances_1 + distances_2
+
+        if len(distances) == 0:
+            return None
+
+        sorted_zipped_array = np.array(
+            sorted(zip(distances, intersections)), dtype=object
+        )
+
+        sorted_intersections = sorted_zipped_array[:, 1]
+        sorted_distances = sorted_zipped_array[:, 0]
+
+        P1 = sorted_intersections[0]
+        Ps = [P1]
+
+        for P in sorted_intersections[1:]:
+            if P1[0] > a1[0] and P[0] < a1[0]:
+                Ps.append(P)
+                break
+            if P1[1] > a1[1] and P[1] < a1[1]:
+                Ps.append(P)
+                break
+
+        for P in Ps:
+            # 2 lines below take 0.3ms
+            self.temp_shapes.append(
+                pyglet.shapes.Line(
+                    a1[0], a1[1], P[0], P[1], 2, color=(0, 255, 0)
                 )
+            )
+            self.temp_shapes.append(
+                pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0))
+            )
 
-                sorted_intersections = sorted_zipped_array[:, 1]
-                sorted_distances = sorted_zipped_array[:, 0]
-
-                P1 = sorted_intersections[0]
-                Ps = [P1]
-
-                for P in sorted_intersections[1:]:
-                    if P1[0] > a1[0] and P[0] < a1[0]:
-                        Ps.append(P)
-                        break
-                    if P1[1] > a1[1] and P[1] < a1[1]:
-                        Ps.append(P)
-                        break
-
-                for P in Ps:
-                    # 2 lines below take 0.3ms
-                    self.temp_shapes.append(
-                        pyglet.shapes.Line(
-                            a1[0], a1[1], P[0], P[1], 2, color=(0, 255, 0)
-                        )
-                    )
-                    self.temp_shapes.append(
-                        pyglet.shapes.Circle(P[0], P[1], 5, color=(0, 145, 0))
-                    )
-
-                return sorted_distances[0]
-
-            else:
-                return None
+        return sorted_distances[0]
 
     def calculate_intersections(self, a1, a2, lines):
         """
@@ -247,7 +252,8 @@ class Track:
         if self.tmp_vertex == ():
             # Convert 3D array into 2D array
             track_vertices = np.array(self.track_vertices)
-            track_vertices_raw = track_vertices.reshape(track_vertices.shape[0], -1)
+            track_vertices_raw = track_vertices.reshape(
+                track_vertices.shape[0], -1)
 
             # Save file
             np.savetxt(filename, track_vertices_raw, delimiter=", ", fmt="%s")
@@ -268,7 +274,8 @@ class Track:
         ).astype(int)
 
         # Convert 2D array into 3D array
-        track_vertices = track_vertices_raw.reshape(track_vertices_raw.shape[0], 2, 2)
+        track_vertices = track_vertices_raw.reshape(
+            track_vertices_raw.shape[0], 2, 2)
 
         for pair in track_vertices:
             self.create_track(pair[0][0], pair[0][1])
