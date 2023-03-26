@@ -1,5 +1,5 @@
-import pyglet
 import numpy as np
+import pyglet
 
 from ._car import Car
 from ._track import Track
@@ -7,8 +7,15 @@ from ._track import Track
 FPS = 60
 
 window = pyglet.window.Window(width=1280, height=720)
-label = pyglet.text.Label('Hello, World!', font_name='Times New Roman', font_size=36,
-                          x=window.width//2, y=window.height//2, anchor_x='center', anchor_y='center')
+label = pyglet.text.Label(
+    "Hello, World!",
+    font_name="Times New Roman",
+    font_size=36,
+    x=window.width // 2,
+    y=window.height // 2,
+    anchor_x="center",
+    anchor_y="center",
+)
 
 track = Track()
 track.load("assets/track_1.txt")
@@ -48,10 +55,8 @@ def on_key_press(symbol, modifiers):
     elif symbol == pyglet.window.key.RIGHT:
         pyglet.clock.schedule_interval(car.right, 1 / FPS)
     elif symbol == pyglet.window.key.SPACE:
-        track.create_track(
-            track.track_vertices[0][0][0], track.track_vertices[0][0][1])
-        track.create_track(
-            track.track_vertices[0][1][0], track.track_vertices[0][1][1])
+        track.create_track(track.track_vertices[0][0][0], track.track_vertices[0][0][1])
+        track.create_track(track.track_vertices[0][1][0], track.track_vertices[0][1][1])
     elif symbol == pyglet.window.key.S:
         track.save(input("Track name: "))
     elif symbol == pyglet.window.key.L:
