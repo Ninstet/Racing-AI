@@ -3,19 +3,17 @@
 ##################################################
 
 import random
-import time
 from collections import deque
-from operator import truediv
 
 import gym
 import numpy as np
-import pyglet
-from Car import Car
-from keras.layers import Dense, Dropout
+from keras.layers import Dense
 from keras.models import Sequential
 from keras.optimizers import Adam
 from tqdm import tqdm
-from Track import Track
+
+from ._car import Car
+from ._track import Track
 
 FPS = 30
 
