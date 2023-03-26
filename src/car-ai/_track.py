@@ -2,10 +2,8 @@
 ##################### IMPORTS ####################
 ##################################################
 
-from dataclasses import asdict
 import pyglet
 import numpy as np
-from time import perf_counter
 
 
 ##################################################
