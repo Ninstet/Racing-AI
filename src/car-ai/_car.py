@@ -5,6 +5,7 @@ ACCELERATION = 0.8
 ROTATION_SPEED = 30
 FPS = 60
 
+
 class Car:
 
     def __init__(self, x, y, friction, vector, track):
@@ -17,7 +18,7 @@ class Car:
         self.vector = vector
         self.track = track
 
-        green_car_image = pyglet.resource.image('green_car.png')
+        green_car_image = pyglet.image.load('assets/green_car.png')
         green_car_image.anchor_x = green_car_image.width // 2
         green_car_image.anchor_y = green_car_image.height // 2
 
@@ -36,21 +37,27 @@ class Car:
         # Acceleration
         self.velocity += self.displacement * self.speed
 
-        self.velocity *= self.friction # Lateral friction
-        self.speed *= self.friction # Drag
+        self.velocity *= self.friction  # Lateral friction
+        self.speed *= self.friction  # Drag
 
         self.pos += self.velocity
 
         # Steering
         self.bearing += self.angular_speed * abs(self.speed)**0.4
 
-        self.displacement = np.array([np.cos(np.radians(self.bearing)), -np.sin(np.radians(self.bearing))]) # Normalise displacement vector
+        self.displacement = np.array([np.cos(np.radians(
+            self.bearing)), -np.sin(np.radians(self.bearing))])  # Normalise displacement vector
         self.angular_speed *= self.friction
 
         # Graphics
-        self.sprite.position = self.pos
-        self.sprite.rotation = self.bearing
-        self.vector.position = (self.pos[0], self.pos[1], self.pos[0] + self.velocity[0] * 10, self.pos[1] + self.velocity[1] * 10)
+        self.sprite.update(
+            x=self.pos[0],
+            y=self.pos[1],
+            rotation=self.bearing,
+        )
+        self.vector.position = (self.pos[0], self.pos[1])
+        self.vector.anchor_position = (
+            self.pos[0] + self.velocity[0] * 10, self.pos[1] + self.velocity[1] * 10)
 
         # Collisions
         for shape in self.track.temp_shapes:
@@ -58,7 +65,8 @@ class Car:
 
         self.track.temp_shapes = []
 
-        if self.has_collided(): self.reset()
+        if self.has_collided():
+            self.reset()
 
         # vector = np.array([np.cos(np.radians(i + self.bearing)), -np.sin(np.radians(i + self.bearing))])
         # self.track.distance_to_nearest_intersection(self.pos, self.pos + vector)
@@ -68,7 +76,8 @@ class Car:
         Checks if the car has collided with any of the lines.
         '''
 
-        distance = self.track.distance_to_nearest_intersection(self.pos, self.pos + self.displacement)
+        distance = self.track.distance_to_nearest_intersection(
+            self.pos, self.pos + self.displacement)
 
         if distance != None:
             if distance < 20:
@@ -82,7 +91,7 @@ class Car:
         '''
 
         self.pos = self.start_pos
-        
+
         self.displacement = np.array([1.0, 0.0])
         self.velocity = np.array([0.0, 0.0])
 
@@ -90,10 +99,11 @@ class Car:
         self.angular_speed = 0
         self.bearing = 0
 
-        self.sprite.position = self.pos
-        self.sprite.rotation = self.bearing
-
-
+        self.sprite.update(
+            x=self.pos[0],
+            y=self.pos[1],
+            rotation=self.bearing,
+        )
 
     def forward(self, dt):
         if self.speed < 0:
@@ -112,8 +122,6 @@ class Car:
 
     def left(self, dt):
         self.angular_speed -= ROTATION_SPEED * dt
-
-
 
     def draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
