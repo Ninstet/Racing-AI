@@ -65,9 +65,9 @@ class Track:
         else:
             self.track_vertices.append((self.tmp_vertex, (x, y)))
             self.tmp_vertex = ()
-            self.update_shapes()
+            self._update_shapes()
 
-    def update_shapes(self):
+    def _update_shapes(self):
         """
         Updates the shapes based on the most recent vertex.
         """
@@ -154,10 +154,10 @@ class Track:
         track_vertices = np.array(self.track_vertices)
 
         # 2 lines below take 0.8ms (was 5.4ms previously)
-        intersections_1, distances_1 = self.calculate_intersections(
+        intersections_1, distances_1 = self._calculate_intersections(
             a1, a2, track_vertices[:, 0]
         )
-        intersections_2, distances_2 = self.calculate_intersections(
+        intersections_2, distances_2 = self._calculate_intersections(
             a1, a2, track_vertices[:, 1]
         )
 
@@ -198,7 +198,7 @@ class Track:
 
         return sorted_distances[0]
 
-    def calculate_intersections(self, a1, a2, lines):
+    def _calculate_intersections(self, a1, a2, lines):
         """
         Calculates all intersection points between an arbitrary line with any line on the track.
         """
