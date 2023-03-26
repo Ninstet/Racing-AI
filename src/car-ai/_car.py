@@ -1,3 +1,7 @@
+##################################################
+##################### IMPORTS ####################
+##################################################
+
 import numpy as np
 import pyglet
 
@@ -6,16 +10,22 @@ ROTATION_SPEED = 30
 FPS = 60
 
 
+##################################################
+##################### CLASSES ####################
+##################################################
+
+
 class Car:
-    def __init__(self, x, y, friction, vector, track):
+    def __init__(self, x, y, friction, track):
         """
         Initialises a car object which has physics and can detect collisions
         """
 
         self.start_pos = (x, y)
         self.friction = friction
-        self.vector = vector
         self.track = track
+
+        self.god = False
 
         green_car_image = pyglet.image.load("assets/green_car.png")
         green_car_image.anchor_x = green_car_image.width // 2
@@ -24,7 +34,11 @@ class Car:
         self.sprite = pyglet.sprite.Sprite(green_car_image, x=x, y=y)
         self.sprite.scale = 0.05
 
+        self.vector = pyglet.shapes.Line(100, 100, 200, 200, 3, color=(250, 30, 30))
+        self.vector.opacity = 250
+
         self.reset()
+        self.check_sensors()
 
         pyglet.clock.schedule_interval(self.physics, 1 / FPS)
 
@@ -67,26 +81,44 @@ class Car:
 
         self.track.temp_shapes = []
 
-        if self.has_collided():
-            self.reset()
+        collision = self.check_sensors()
+        distance = self.track.distance_to_reward_gate(
+            self.pos, self.pos + self.displacement, self.target_reward_gate
+        )
 
-        # vector = np.array([np.cos(np.radians(i + self.bearing)), -np.sin(np.radians(i + self.bearing))])
-        # self.track.distance_to_nearest_intersection(self.pos, self.pos + vector)
+        if distance != None:
+            if distance < 15:
+                self.target_reward_gate += 1
 
-    def has_collided(self):
+        return collision
+
+    def check_sensors(self):
         """
         Checks if the car has collided with any of the lines.
         """
+        for i in np.arange(0, 180, 30):
+            vector = np.array(
+                [
+                    np.cos(np.radians(i + self.bearing)),
+                    -np.sin(np.radians(i + self.bearing)),
+                ]
+            )
 
-        distance = self.track.distance_to_nearest_intersection(
-            self.pos, self.pos + self.displacement
-        )
+            intersections, distances = self.track.get_intersections(
+                self.pos, self.pos + vector
+            )
 
-        if distance == None:
-            return False
+            if len(distances) > 0:
+                if distances[0] < 15:
+                    if self.god == False:
+                        for shape in self.track.gate_shapes:
+                            shape.color = (255, 0, 0)
+                        self.reset()
 
-        if distance > 20:
-            return False
+                        return True
+
+            self.sensors[2 * (i // 30)] = distances[0]
+            self.sensors[(2 * (i // 30)) + 1] = distances[1]
 
         return True
 
@@ -103,6 +135,9 @@ class Car:
         self.speed = 0
         self.angular_speed = 0
         self.bearing = 0
+
+        self.sensors = np.zeros(2 * (180 // 30))
+        self.target_reward_gate = 0
 
         self.sprite.update(
             x=self.pos[0],
@@ -122,11 +157,11 @@ class Car:
         else:
             self.speed -= ACCELERATION * dt
 
-    def right(self, dt):
-        self.angular_speed += ROTATION_SPEED * dt
-
     def left(self, dt):
         self.angular_speed -= ROTATION_SPEED * dt
+
+    def right(self, dt):
+        self.angular_speed += ROTATION_SPEED * dt
 
     def draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
