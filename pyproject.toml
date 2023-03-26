@@ -1,0 +1,30 @@
+[project]
+name = "car-ai"
+version = "0.0.0"
+authors = [{ name = "Jake Ward", email = "jakeward28@hotmail.com" }]
+description = "Reinforcement learning in a basic racing game"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy==1.24.2",
+    "pyglet==2.0.5",
+]
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools~=67.6.0",
+    "wheel~=0.40.0",
+]
+
+[tool.pylint]
+max-line-length = 88
+disable = [
+    "C0103", # (invalid-name)
+    "C0114", # (missing-module-docstring)
+    "C0115", # (missing-class-docstring)
+    "C0116", # (missing-function-docstring)
+    "R0903", # (too-few-public-methods)
+    "R0913", # (too-many-arguments)
+    "W0105", # (pointless-string-statement)
+]

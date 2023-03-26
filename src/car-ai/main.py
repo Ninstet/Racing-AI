@@ -2,32 +2,27 @@
 ##################### IMPORTS ####################
 ##################################################
 
-import pyglet
 import numpy as np
-# pyglet.options['audio'] = ('openal', 'pulse', 'directsound', 'silent')
-# import pyglet.media
+import pyglet
 
-from Car import Car
-from Track import Track
-
-
+from ._car import Car
+from ._track import Track
 
 FPS = 30
-
 
 
 ##################################################
 ##################### CLASSES ####################
 ##################################################
 
-class Window(pyglet.window.Window):
 
+class Window(pyglet.window.Window):
     def __init__(self):
         super(Window, self).__init__(width=1280, height=720)
         self.set_visible()
 
         self.track = Track()
-        self.track.load("track_1")
+        self.track.load("assets/track_1.txt")
 
         self.drag = pyglet.shapes.Line(0, 0, 0, 0, 3, color=(250, 30, 30))
         self.drag.opacity = 250
@@ -48,16 +43,25 @@ class Window(pyglet.window.Window):
         self.car.draw()
         self.car.vector.draw()
         self.drag.draw()
-        
-        pyglet.text.Label(f"Score: {str(self.car.target_reward_gate)}", color=(0, 0, 0, 255), font_name='Arial', font_size=16, x=1150, y=50, anchor_x='center', anchor_y='center').draw()
+
+        pyglet.text.Label(
+            f"Score: {str(self.car.target_reward_gate)}",
+            color=(0, 0, 0, 255),
+            font_name="Arial",
+            font_size=16,
+            x=1150,
+            y=50,
+            anchor_x="center",
+            anchor_y="center",
+        ).draw()
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.track.create_track(x, y)
-        self.drag.position = (x, y, x, y)
+        self.drag.position = (x, y)
 
     def on_mouse_release(self, x, y, button, modifiers):
         self.track.create_track(x, y)
-        self.drag.position = (0, 0, 0, 0)
+        self.drag.position = (0, 0)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
         self.drag.x2 = x
@@ -73,8 +77,12 @@ class Window(pyglet.window.Window):
         elif symbol == pyglet.window.key.RIGHT:
             pyglet.clock.schedule_interval(self.car.right, 1 / FPS)
         elif symbol == pyglet.window.key.SPACE:
-            self.track.create_track(self.track.track_vertices[0][0][0], self.track.track_vertices[0][0][1])
-            self.track.create_track(self.track.track_vertices[0][1][0], self.track.track_vertices[0][1][1])
+            self.track.create_track(
+                self.track.track_vertices[0][0][0], self.track.track_vertices[0][0][1]
+            )
+            self.track.create_track(
+                self.track.track_vertices[0][1][0], self.track.track_vertices[0][1][1]
+            )
         elif symbol == pyglet.window.key.S:
             self.track.save(input("Track name: "))
         elif symbol == pyglet.window.key.L:
@@ -100,11 +108,10 @@ class Window(pyglet.window.Window):
             pyglet.clock.unschedule(self.car.right)
 
 
-
 ##################################################
 ###################### MAIN ######################
 ##################################################
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     window = Window()
     pyglet.app.run()
