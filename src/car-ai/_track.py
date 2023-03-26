@@ -153,7 +153,6 @@ class Track:
 
         track_vertices = np.array(self.track_vertices)
 
-        # 2 lines below take 0.8ms (was 5.4ms previously)
         intersections_1, distances_1 = self._calculate_intersections(
             a1, a2, track_vertices[:, 0]
         )
@@ -186,7 +185,6 @@ class Track:
                 break
 
         for P in Ps:
-            # 2 lines below take 0.3ms
             self.temp_shapes.append(
                 pyglet.shapes.Line(
                     a1[0], a1[1], P[0], P[1], 2, color=(0, 255, 0)
