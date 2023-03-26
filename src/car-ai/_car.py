@@ -82,11 +82,13 @@ class Car:
             self.pos, self.pos + self.displacement
         )
 
-        if distance != None:
-            if distance < 20:
-                return True
+        if distance == None:
+            return False
 
-        return False
+        if distance > 20:
+            return False
+
+        return True
 
     def reset(self):
         """
