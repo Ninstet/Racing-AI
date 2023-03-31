@@ -5,8 +5,8 @@
 import numpy as np
 import pyglet
 
-from ._car import Car
-from ._track import Track
+from .car import Car
+from .track import Track
 
 FPS = 30
 

@@ -1,5 +1,5 @@
 [project]
-name = "car-ai"
+name = "racing-ai"
 version = "0.0.0"
 authors = [{ name = "Jake Ward", email = "jakeward28@hotmail.com" }]
 description = "Reinforcement learning in a basic racing game"
@@ -8,6 +8,7 @@ requires-python = ">=3.8"
 dependencies = [
     "gym==0.26.2",
     "keras==2.12.0",
+    "torch~=2.0",
     "numpy==1.24.2",
     "pyglet==2.0.5",
     "tqdm==4.65.0",
