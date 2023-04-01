@@ -15,10 +15,13 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+from .env import Environment
+
 
 ############### Setup ###############
 
-env = gym.make("CartPole-v1")
+# env = gym.make("CartPole-v1")
+env = Environment()
 
 # set up matplotlib
 is_ipython = "inline" in matplotlib.get_backend()
@@ -124,24 +127,38 @@ def select_action(state):
 
 
 episode_durations = []
+episode_rewards = []
+gate_episodes = []
 
 
 def plot_durations(show_result=False):
     plt.figure(1)
     durations_t = torch.tensor(episode_durations, dtype=torch.float)
+    rewards_t = torch.tensor(episode_rewards, dtype=torch.float)
     if show_result:
         plt.title("Result")
     else:
         plt.clf()
         plt.title("Training...")
+    # Set x and y axis to start at 0
+    plt.xlim(0, len(episode_rewards))
+    plt.ylim(0, max(episode_rewards))
     plt.xlabel("Episode")
     plt.ylabel("Duration")
-    plt.plot(durations_t.numpy())
+    plt.plot(durations_t.numpy(), label="Duration")
+    plt.plot(rewards_t.numpy(), label="Reward")
+    plt.legend()
     # Take 100 episode averages and plot them too
-    if len(durations_t) >= 100:
-        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+    if len(rewards_t) >= 100:
+        means = rewards_t.unfold(0, 100, 1).mean(1).view(-1)
         means = torch.cat((torch.zeros(99), means))
-        plt.plot(means.numpy())
+        plt.plot(means.numpy(), label="Reward (100 episode average)")
+    
+    # Display dashed lines where gates are
+    for gate in enumerate(gate_episodes):
+        # Put the gate number on the left side of the gate, with the height set to the max reward and the text vertical
+        plt.text(gate[1], max(rewards_t.numpy()), str(f"Gate {gate[0]}"), color='r', rotation=90, verticalalignment='bottom')
+        plt.axvline(x=gate[1], color='r', linestyle='--')
 
     plt.pause(0.001)  # pause a bit so that plots are updated
     if is_ipython:
@@ -206,7 +223,7 @@ def optimize_model():
 
 if __name__ == "__main__":
     if torch.cuda.is_available():
-        num_episodes = 6
+        num_episodes = 6000
     else:
         num_episodes = 50
 
@@ -216,9 +233,11 @@ if __name__ == "__main__":
         # Initialize the environment and get it's state
         state, info = env.reset()
         state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
+        total_reward = 0
         for t in count():
             action = select_action(state)
             observation, reward, terminated, truncated, _ = env.step(action.item())
+            total_reward += reward
             reward = torch.tensor([reward], device=device)
             done = terminated or truncated
 
@@ -248,10 +267,18 @@ if __name__ == "__main__":
                 ] * TAU + target_net_state_dict[key] * (1 - TAU)
             target_net.load_state_dict(target_net_state_dict)
 
+            if env.car.target_reward_gate > len(gate_episodes):
+                gate_episodes.append(i_episode)
+
             if done:
                 episode_durations.append(t + 1)
+                episode_rewards.append(total_reward)
                 plot_durations()
                 break
+
+    # Save the models
+    torch.save(policy_net.state_dict(), "policy_net.pth")
+    torch.save(target_net.state_dict(), "target_net.pth")
 
     print("Complete")
     plot_durations(show_result=True)

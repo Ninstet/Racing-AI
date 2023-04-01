@@ -120,7 +120,7 @@ class Car:
             self.sensors[2 * (i // 30)] = distances[0]
             self.sensors[(2 * (i // 30)) + 1] = distances[1]
 
-        return True
+        return False
 
     def reset(self):
         """
