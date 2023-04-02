@@ -9,7 +9,7 @@ import gym
 from racing_ai.car import Car
 from racing_ai.track import Track
 
-FPS = 10
+FPS = 30
 
 
 ##################################################
