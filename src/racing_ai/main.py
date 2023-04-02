@@ -2,11 +2,13 @@
 ##################### IMPORTS ####################
 ##################################################
 
-import numpy as np
 import pyglet
+import numpy as np
+import torch
 
 from .car import Car
 from .track import Track
+from .train import DQN
 
 FPS = 30
 
@@ -28,6 +30,17 @@ class Window(pyglet.window.Window):
         self.drag.opacity = 250
 
         self.car = Car(400, 200, 0.95, self.track)
+
+        self.model_enabled = False
+        self.model = DQN(len(self.car.sensors) + 1, 5)
+        self.model.load_state_dict(torch.load("target_net.pth"))
+
+    def update_from_model(self, dt):
+        state = np.append(self.car.sensors, [self.car.speed], axis=0)
+        state_tensor = torch.tensor(state, dtype=torch.float32)
+        action_tensor = self.model(state_tensor)
+        action = action_tensor.detach().numpy()
+        self.car.move(np.argmax(action), dt)
 
     def on_draw(self):
         self.clear()
@@ -51,6 +64,17 @@ class Window(pyglet.window.Window):
             font_size=16,
             x=1150,
             y=50,
+            anchor_x="center",
+            anchor_y="center",
+        ).draw()
+        
+        pyglet.text.Label(
+            f"Model Enabled: {str(self.model_enabled)}",
+            color=(0, 0, 0, 255),
+            font_name="Arial",
+            font_size=16,
+            x=1150,
+            y=25,
             anchor_x="center",
             anchor_y="center",
         ).draw()
@@ -96,6 +120,14 @@ class Window(pyglet.window.Window):
             self.track.rays_visible = not self.track.rays_visible
         elif symbol == pyglet.window.key.G:
             self.car.god = not self.car.god
+        elif symbol == pyglet.window.key.M:
+            if self.model_enabled:
+                pyglet.clock.unschedule(self.update_from_model)
+            else:
+                pyglet.clock.schedule_interval(self.update_from_model, 1 / FPS)
+            self.model_enabled = not self.model_enabled
+        elif symbol == pyglet.window.key.ESCAPE:
+            self.close()
 
     def on_key_release(self, symbol, modifiers):
         if symbol == pyglet.window.key.UP:

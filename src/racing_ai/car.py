@@ -5,9 +5,11 @@
 import numpy as np
 import pyglet
 
+from .track import Track
+
 ACCELERATION = 0.8
 ROTATION_SPEED = 30
-FPS = 60
+FPS = 30
 
 
 ##################################################
@@ -16,7 +18,7 @@ FPS = 60
 
 
 class Car:
-    def __init__(self, x, y, friction, track):
+    def __init__(self, x, y, friction, track: Track):
         """
         Initialises a car object which has physics and can detect collisions
         """
@@ -144,6 +146,18 @@ class Car:
             y=self.pos[1],
             rotation=self.bearing,
         )
+
+    def move(self, action, dt):
+        if action == 0:
+            pass
+        elif action == 1:
+            self.forward(dt)
+        elif action == 2:
+            self.backward(dt)
+        elif action == 3:
+            self.left(dt)
+        elif action == 4:
+            self.right(dt)
 
     def forward(self, dt):
         if self.speed < 0:

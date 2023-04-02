@@ -167,128 +167,122 @@ class Track:
         Returns the distance to a given reward gate along a particular vector.
         """
 
-        # If there is at least 1 pair of track vertices
-        if len(self.track_vertices) > 1:
-            track_vertices = np.array(self.track_vertices)
-
-            # Calculate intersections and distances to the reward gates
-            intersections, distances = self.compute_intersections(
-                a1, a2, track_vertices[(gate + 1) % len(track_vertices), :]
-            )
-
-            # Update shape colours to indicate next reward gate
-            self.gate_shapes[gate % len(self.gate_shapes)].color = (255, 0, 0)
-            self.gate_shapes[(gate + 1) % len(self.gate_shapes)].color = (0, 0, 255)
-
-            # If there is at least 1 reward gate
-            if len(distances) > 0:
-                self.temp_shapes.append(
-                    pyglet.shapes.Line(
-                        a1[0],
-                        a1[1],
-                        intersections[0][0],
-                        intersections[0][1],
-                        2,
-                        color=(0, 0, 220),
-                        batch=self.temp_batch,
-                    )
-                )
-                self.temp_shapes.append(
-                    pyglet.shapes.Circle(
-                        intersections[0][0],
-                        intersections[0][1],
-                        5,
-                        color=(0, 0, 145),
-                        batch=self.temp_batch,
-                    )
-                )
-
-                return distances[0]
-
-            # No reward gates
-            else:
-                return None
-
-        # Less than 1 pair of track vertices
-        else:
+        # Check there is at least 1 pair of track vertices
+        if len(self.track_vertices) < 2:
             return None
+
+        track_vertices = np.array(self.track_vertices)
+
+        # Calculate intersections and distances to the reward gates
+        intersections, distances = self.compute_intersections(
+            a1, a2, track_vertices[(gate + 1) % len(track_vertices), :]
+        )
+
+        # Update shape colours to indicate next reward gate
+        self.gate_shapes[gate % len(self.gate_shapes)].color = (255, 0, 0)
+        self.gate_shapes[(gate + 1) % len(self.gate_shapes)].color = (0, 0, 255)
+
+        # Check there is at least 1 reward gate
+        if len(distances) == 0:
+            return None
+
+        self.temp_shapes.append(
+            pyglet.shapes.Line(
+                a1[0],
+                a1[1],
+                intersections[0][0],
+                intersections[0][1],
+                2,
+                color=(0, 0, 220),
+                batch=self.temp_batch,
+            )
+        )
+        self.temp_shapes.append(
+            pyglet.shapes.Circle(
+                intersections[0][0],
+                intersections[0][1],
+                5,
+                color=(0, 0, 145),
+                batch=self.temp_batch,
+            )
+        )
+
+        return distances[0]
 
     def get_intersections(self, a1, a2):
         """
         Finds the positions and distances to the nearest intersection points along a line.
         """
 
-        # If there is at least 1 pair of track vertices
-        if len(self.track_vertices) > 0:
-            track_vertices = np.array(self.track_vertices)
-
-            # Calculate intersections and distances for inside and outside barriers of track
-            intersections_1, distances_1 = self.compute_intersections(
-                a1, a2, track_vertices[:, 0]
-            )
-            intersections_2, distances_2 = self.compute_intersections(
-                a1, a2, track_vertices[:, 1]
-            )
-
-            # Combine intersections and distances
-            intersections = intersections_1 + intersections_2
-            distances = distances_1 + distances_2
-
-            # If at least 1 intersection has been found
-            if len(distances) > 0:
-                sorted_intersections = []
-                sorted_distances = []
-
-                # Sort intersections and distances from smallest distance first
-                for map in sorted(zip(distances, intersections)):
-                    sorted_intersections.append(map[1])
-                    sorted_distances.append(map[0])
-
-                closest_intersections = [sorted_intersections[0]]
-                closest_distances = [sorted_distances[0]]
-
-                # Find intersection point that is opposite to the closest point
-                for i in range(len(sorted_intersections) - 1):
-                    P = sorted_intersections[i + 1]
-
-                    if (
-                        (closest_intersections[0][0] > a1[0] and P[0] < a1[0])
-                        or (closest_intersections[0][1] > a1[1] and P[1] < a1[1])
-                        or (closest_intersections[0][0] < a1[0] and P[0] > a1[0])
-                        or (closest_intersections[0][1] < a1[1] and P[1] > a1[1])
-                    ):
-                        closest_intersections.append(P)
-                        closest_distances.append(sorted_distances[i + 1])
-
-                        break
-
-                # Draw intersection detection shapes
-                for P in closest_intersections:
-                    self.temp_shapes.append(
-                        pyglet.shapes.Line(
-                            a1[0],
-                            a1[1],
-                            P[0],
-                            P[1],
-                            2,
-                            color=(0, 220, 0),
-                            batch=self.temp_batch,
-                        )
-                    )
-                    self.temp_shapes.append(
-                        pyglet.shapes.Circle(
-                            P[0], P[1], 5, color=(0, 145, 0), batch=self.temp_batch
-                        )
-                    )
-
-                # Return closest intersection distance
-                return closest_intersections, closest_distances
-
-            else:
-                return [], []
-
-        else:
+        # Check there is at least 1 pair of track vertices
+        if len(self.track_vertices) < 1:
             return [], []
+
+        track_vertices = np.array(self.track_vertices)
+
+        # Calculate intersections and distances for inside and outside barriers of track
+        intersections_1, distances_1 = self.compute_intersections(
+            a1, a2, track_vertices[:, 0]
+        )
+        intersections_2, distances_2 = self.compute_intersections(
+            a1, a2, track_vertices[:, 1]
+        )
+
+        # Combine intersections and distances
+        intersections = intersections_1 + intersections_2
+        distances = distances_1 + distances_2
+
+        # Check at least 1 intersection has been found
+        if len(distances) < 1:
+            return [], []
+
+        sorted_intersections = []
+        sorted_distances = []
+
+        # Sort intersections and distances from smallest distance first
+        for map in sorted(zip(distances, intersections)):
+            sorted_intersections.append(map[1])
+            sorted_distances.append(map[0])
+
+        closest_intersections = [sorted_intersections[0]]
+        closest_distances = [sorted_distances[0]]
+
+        # Find intersection point that is opposite to the closest point
+        for i in range(len(sorted_intersections) - 1):
+            P = sorted_intersections[i + 1]
+
+            if (
+                (closest_intersections[0][0] > a1[0] and P[0] < a1[0])
+                or (closest_intersections[0][1] > a1[1] and P[1] < a1[1])
+                or (closest_intersections[0][0] < a1[0] and P[0] > a1[0])
+                or (closest_intersections[0][1] < a1[1] and P[1] > a1[1])
+            ):
+                closest_intersections.append(P)
+                closest_distances.append(sorted_distances[i + 1])
+
+                break
+
+        # Draw intersection detection shapes
+        for P in closest_intersections:
+            self.temp_shapes.append(
+                pyglet.shapes.Line(
+                    a1[0],
+                    a1[1],
+                    P[0],
+                    P[1],
+                    2,
+                    color=(0, 220, 0),
+                    batch=self.temp_batch,
+                )
+            )
+            self.temp_shapes.append(
+                pyglet.shapes.Circle(
+                    P[0], P[1], 5, color=(0, 145, 0), batch=self.temp_batch
+                )
+            )
+
+        # Return closest intersection distance
+        return closest_intersections, closest_distances
 
     def compute_intersections(self, a1, a2, lines):
         """

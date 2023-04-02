@@ -130,28 +130,54 @@ def select_action(state):
         )
 
 
-episode_durations = []
-episode_rewards = []
-gate_episodes = []
+log = {
+    "durations": [],
+    "rewards": [],
+    "gates": [],
+    "pauses": [],
+    "forwards": [],
+    "backwards": [],
+    "lefts": [],
+    "rights": [],
+}
 
 
 def plot_durations(show_result=False):
-    plt.figure(1)
-    durations_t = torch.tensor(episode_durations, dtype=torch.float)
-    rewards_t = torch.tensor(episode_rewards, dtype=torch.float)
+    plt.figure(1, figsize=(12, 8))
+
+    durations_t = torch.tensor(log["durations"], dtype=torch.float)
+    rewards_t = torch.tensor(log["rewards"], dtype=torch.float)
+    puases_t = torch.tensor(log["pauses"], dtype=torch.float)
+    forwards_t = torch.tensor(log["forwards"], dtype=torch.float)
+    backwards_t = torch.tensor(log["backwards"], dtype=torch.float)
+    lefts_t = torch.tensor(log["lefts"], dtype=torch.float)
+    rights_t = torch.tensor(log["rights"], dtype=torch.float)
+
     if show_result:
         plt.title("Result")
     else:
         plt.clf()
         plt.title("Training...")
+
     # Set x and y axis to start at 0
-    plt.xlim(0, len(episode_rewards))
-    plt.ylim(0, max(episode_rewards))
+    plt.xlim(0, len(log["rewards"]))
+    plt.ylim(0, max(log["rewards"]))
+
     plt.xlabel("Episode")
-    plt.ylabel("Duration")
-    plt.plot(durations_t.numpy(), label="Duration")
-    plt.plot(rewards_t.numpy(), label="Reward")
+    plt.grid(True)
+    
+    # Set x axis to show every 5 episodes
+    plt.xticks(range(0, len(log["rewards"]), 5))
+
+    plt.plot(durations_t.numpy(), label="Duration", color='r')
+    plt.plot(rewards_t.numpy(), label="Reward", color='b')
+    plt.plot(puases_t.numpy(), label="Total Pauses", linestyle='--')
+    plt.plot(forwards_t.numpy(), label="Total Forwards", linestyle='--')
+    plt.plot(backwards_t.numpy(), label="Total Backwards", linestyle='--')
+    plt.plot(lefts_t.numpy(), label="Total Lefts", linestyle='--')
+    plt.plot(rights_t.numpy(), label="Total Rights", linestyle='--')
     plt.legend()
+
     # Take 100 episode averages and plot them too
     if len(rewards_t) >= 100:
         means = rewards_t.unfold(0, 100, 1).mean(1).view(-1)
@@ -159,9 +185,10 @@ def plot_durations(show_result=False):
         plt.plot(means.numpy(), label="Reward (100 episode average)")
     
     # Display dashed lines where gates are
-    for gate in enumerate(gate_episodes):
-        # Put the gate number on the left side of the gate, with the height set to the max reward and the text vertical
-        plt.text(gate[1], max(rewards_t.numpy()), str(f"Gate {gate[0]}"), color='r', rotation=90, verticalalignment='bottom')
+    for gate in enumerate(log["gates"]):
+        # Put the gate number above the line, hozicontally aligned to the line
+        plt.text(gate[1], -5, str(f"Gate {gate[0] + 1}"), color='r', rotation=90, verticalalignment='top')
+        # plt.text(gate[1], max(rewards_t.numpy()), str(f"Gate {gate[0]}"), color='r', rotation=90, verticalalignment='bottom')
         plt.axvline(x=gate[1], color='r', linestyle='--')
 
     plt.pause(0.001)  # pause a bit so that plots are updated
@@ -233,58 +260,82 @@ if __name__ == "__main__":
 
     print("Training")
 
-    for i_episode in tqdm(range(num_episodes)):
-        # Initialize the environment and get it's state
-        state, info = env.reset()
-        state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
-        total_reward = 0
-        for t in count():
-            action = select_action(state)
-            observation, reward, terminated, truncated, _ = env.step(action.item())
-            total_reward += reward
-            reward = torch.tensor([reward], device=device)
-            done = terminated or truncated
+    try:
+        for i_episode in tqdm(range(num_episodes)):
+            # Initialize the environment and get it's state
+            state, info = env.reset()
+            state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
 
-            if terminated:
-                next_state = None
-            else:
-                next_state = torch.tensor(
-                    observation, dtype=torch.float32, device=device
-                ).unsqueeze(0)
+            total_reward = 0
+            total_pauses = 0
+            total_forwards = 0
+            total_backwards = 0
+            total_lefts = 0
+            total_rights = 0
 
-            # Store the transition in memory
-            memory.push(state, action, next_state, reward)
+            for t in count():
+                action = select_action(state)
+                observation, reward, terminated, truncated, _ = env.step(action.item())
 
-            # Move to the next state
-            state = next_state
+                total_reward += reward
+                total_pauses += action == 0
+                total_forwards += action == 1
+                total_backwards += action == 2
+                total_lefts += action == 3
+                total_rights += action == 4
 
-            # Perform one step of the optimization (on the policy network)
-            optimize_model()
+                reward = torch.tensor([reward], device=device)
+                done = terminated or truncated
 
-            # Soft update of the target network's weights
-            # θ′ ← τ θ + (1 −τ )θ′
-            target_net_state_dict = target_net.state_dict()
-            policy_net_state_dict = policy_net.state_dict()
-            for key in policy_net_state_dict:
-                target_net_state_dict[key] = policy_net_state_dict[
-                    key
-                ] * TAU + target_net_state_dict[key] * (1 - TAU)
-            target_net.load_state_dict(target_net_state_dict)
+                if terminated:
+                    next_state = None
+                else:
+                    next_state = torch.tensor(
+                        observation, dtype=torch.float32, device=device
+                    ).unsqueeze(0)
 
-            if env.car.target_reward_gate > len(gate_episodes):
-                gate_episodes.append(i_episode)
+                # Store the transition in memory
+                memory.push(state, action, next_state, reward)
 
-            if done:
-                episode_durations.append(t + 1)
-                episode_rewards.append(total_reward)
-                plot_durations()
-                break
+                # Move to the next state
+                state = next_state
 
-    # Save the models
-    torch.save(policy_net.state_dict(), "policy_net.pth")
-    torch.save(target_net.state_dict(), "target_net.pth")
+                # Perform one step of the optimization (on the policy network)
+                optimize_model()
 
-    print("Complete")
-    plot_durations(show_result=True)
-    plt.ioff()
-    plt.show()
+                # Soft update of the target network's weights
+                # θ′ ← τ θ + (1 −τ )θ′
+                target_net_state_dict = target_net.state_dict()
+                policy_net_state_dict = policy_net.state_dict()
+                for key in policy_net_state_dict:
+                    target_net_state_dict[key] = policy_net_state_dict[
+                        key
+                    ] * TAU + target_net_state_dict[key] * (1 - TAU)
+                target_net.load_state_dict(target_net_state_dict)
+
+                # Determine if we have reached a new target reward gate
+                if env.car.target_reward_gate > len(log["gates"]):
+                    log["gates"].append(i_episode)
+
+                if done:
+                    log["durations"].append(t + 1)
+                    log["rewards"].append(total_reward)
+                    log["pauses"].append(total_pauses)
+                    log["forwards"].append(total_forwards)
+                    log["backwards"].append(total_backwards)
+                    log["lefts"].append(total_lefts)
+                    log["rights"].append(total_rights)
+
+                    plot_durations()
+
+                    break
+
+    finally:
+        # Save the models
+        torch.save(policy_net.state_dict(), "policy_net.pth")
+        torch.save(target_net.state_dict(), "target_net.pth")
+
+        print("Complete")
+        plot_durations(show_result=True)
+        plt.ioff()
+        plt.show()

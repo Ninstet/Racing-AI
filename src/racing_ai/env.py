@@ -2,7 +2,7 @@
 ##################### IMPORTS ####################
 ##################################################
 
-import time
+import numpy as np
 import random
 import gym
 
@@ -42,7 +42,7 @@ class Environment(gym.Env):
 
         self.action_space = gym.spaces.Discrete(5)
         self.observation_space = gym.spaces.Box(
-            low=15, high=500, shape=(len(self.car.sensors),)
+            low=0, high=500, shape=(len(self.car.sensors) + 1,)
         )
 
         self.delay = 1 / FPS
@@ -55,31 +55,23 @@ class Environment(gym.Env):
     def step(self, action):
         self.no_steps += 1
 
-        if action == 0:
-            pass
-        elif action == 1:
-            self.car.forward(self.delay)
-        elif action == 2:
-            self.car.backward(self.delay)
-        elif action == 3:
-            self.car.left(self.delay)
-        elif action == 4:
-            self.car.right(self.delay)
+        self.car.move(action, self.delay)
 
         # old_target_reward_gate = self.car.target_reward_gate
         collision = self.car.physics(self.delay)
-        gate_incentive = self.car.target_reward_gate * 10
+        gate_incentive = self.car.target_reward_gate
         forward_incentive = self.car.speed
 
         # print(f"{action}  {gate_incentive}  {forward_incentive}")
 
-        state = self.car.sensors
+        state = np.concatenate((self.car.sensors, [self.car.speed]))
+
         reward = (
             -100
             if collision
-            else gate_incentive + forward_incentive
+            else gate_incentive # + forward_incentive
         )
-        done = collision or self.no_steps >= FPS * 20 # 20 seconds until timeout
+        done = collision or self.no_steps >= FPS * 60 # 60 seconds until timeout
         info = []
 
         return state, reward, done, info, None
@@ -89,4 +81,4 @@ class Environment(gym.Env):
 
         self.no_steps = 0
 
-        return self.car.sensors, []
+        return np.append(self.car.sensors, [self.car.speed], axis=0), []
