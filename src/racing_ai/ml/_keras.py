@@ -143,18 +143,18 @@ def main():
     steps = []
 
     for trial in range(trials):
-        cur_state = env.reset().reshape(1, 12)
+        cur_state = env.reset()[0].reshape(1, 13)
         total_reward = 0
 
         progress_bar = tqdm(
             range(trial_len), desc="Reached Gate " + str(env.car.target_reward_gate)
         )
-        for step in progress_bar:
+        for step in range(trial_len):
             action = dqn_agent.act(cur_state)
-            new_state, reward, done, _ = env.step(action)
+            new_state, reward, done, _, _ = env.step(action)
 
             # reward = reward if not done else -20
-            new_state = new_state.reshape(1, 12)
+            new_state = new_state.reshape(1, 13)
             dqn_agent.remember(cur_state, action, reward, new_state, done)
 
             dqn_agent.replay()  # internally iterates default (prediction) model    (2.5 seconds)

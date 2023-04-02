@@ -29,15 +29,13 @@ class Environment(gym.Env):
         )
 
         self.delay = 1 / FPS
-
         self.no_steps = 0
 
     def sample(self):
-        return random.randint(0, 2)
+        return random.randint(0, 4)
 
     def step(self, action):
         self.no_steps += 1
-
         self.car.move(action, self.delay)
 
         # old_target_reward_gate = self.car.target_reward_gate
@@ -47,8 +45,7 @@ class Environment(gym.Env):
 
         # print(f"{action}  {gate_incentive}  {forward_incentive}")
 
-        state = np.concatenate((self.car.sensors, [self.car.speed]))
-
+        state = self.car.get_state()
         reward = (
             -100
             if collision
@@ -61,7 +58,6 @@ class Environment(gym.Env):
 
     def reset(self):
         self.car.reset()
-
         self.no_steps = 0
 
-        return np.append(self.car.sensors, [self.car.speed], axis=0), []
+        return self.car.get_state(), []

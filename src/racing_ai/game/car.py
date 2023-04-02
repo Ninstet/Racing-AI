@@ -149,6 +149,9 @@ class Car:
             rotation=self.bearing,
         )
 
+    def get_state(self):
+        return np.concatenate((self.sensors, [self.speed]))
+
     def move(self, action, dt):
         if action == 0:
             pass
