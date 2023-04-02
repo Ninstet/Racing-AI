@@ -12,22 +12,6 @@ from racing_ai.track import Track
 FPS = 10
 
 
-# Write a function that converts 0 to SLEEP, 1 to FORWARD, 2 to BACKWARD, 3 to LEFT, 4 to RIGHT
-def convert_action(action):
-    if action == 0:
-        return "SLEEP"
-    elif action == 1:
-        return "FORWARD"
-    elif action == 2:
-        return "BACKWARD"
-    elif action == 3:
-        return "LEFT"
-    elif action == 4:
-        return "RIGHT"
-    else:
-        return "ERROR"
-
-
 ##################################################
 ##################### CLASSES ####################
 ##################################################
