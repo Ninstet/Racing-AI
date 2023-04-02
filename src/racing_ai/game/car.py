@@ -5,7 +5,7 @@
 import numpy as np
 import pyglet
 
-from racing_ai.track import Track
+from racing_ai.game.track import Track
 
 ACCELERATION = 0.8
 ROTATION_SPEED = 30

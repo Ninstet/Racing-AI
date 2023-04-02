@@ -6,8 +6,8 @@ import pyglet
 import numpy as np
 import torch
 
-from racing_ai.car import Car
-from racing_ai.track import Track
+from racing_ai.game.car import Car
+from racing_ai.game.track import Track
 from racing_ai.ml.train import DQN
 
 FPS = 30

@@ -6,8 +6,8 @@ import numpy as np
 import random
 import gym
 
-from racing_ai.car import Car
-from racing_ai.track import Track
+from racing_ai.game.car import Car
+from racing_ai.game.track import Track
 
 FPS = 30
 
