@@ -2,6 +2,7 @@
 ##################### IMPORTS ####################
 ##################################################
 
+
 import random
 from collections import deque
 
@@ -11,7 +12,7 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from tqdm import tqdm
 
-from .ml.env import Environment
+from racing_ai.ml.env import Environment
 
 FPS = 30
 
@@ -27,7 +28,8 @@ class DQN:
         self.memory = deque(maxlen=2000)
 
         self.gamma = 0.85  # Future rewards depreciation factor (< 1)
-        self.epsilon = 1.0  # Exploration vs. exploitation factor (the fraction of time we will dedicate to exploring)
+        # Exploration vs. exploitation factor (the fraction of time we will dedicate to exploring)
+        self.epsilon = 1.0
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = 0.005  # Standard learning rate parameter
@@ -51,7 +53,8 @@ class DQN:
         model.add(Dense(24, activation="relu"))
         model.add(Dense(self.env.action_space.n))
 
-        model.compile(loss="mean_squared_error", optimizer=Adam(lr=self.learning_rate))
+        model.compile(loss="mean_squared_error",
+                      optimizer=Adam(lr=self.learning_rate))
 
         return model
 

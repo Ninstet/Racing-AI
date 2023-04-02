@@ -6,9 +6,9 @@ import pyglet
 import numpy as np
 import torch
 
-from .car import Car
-from .track import Track
-from .train import DQN
+from racing_ai.car import Car
+from racing_ai.track import Track
+from racing_ai.ml.train import DQN
 
 FPS = 30
 
@@ -67,7 +67,7 @@ class Window(pyglet.window.Window):
             anchor_x="center",
             anchor_y="center",
         ).draw()
-        
+
         pyglet.text.Label(
             f"Model Enabled: {str(self.model_enabled)}",
             color=(0, 0, 0, 255),

@@ -25,5 +25,5 @@ python -m racing_ai.main
 To start the training pipeline:
 
 ```sh
-python -m racing_ai.train
+python -m racing_ai.ml.train
 ```

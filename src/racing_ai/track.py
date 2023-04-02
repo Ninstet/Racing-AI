@@ -2,11 +2,10 @@
 ##################### IMPORTS ####################
 ##################################################
 
-from dataclasses import asdict
-from time import perf_counter
 
 import numpy as np
 import pyglet
+
 
 ##################################################
 #################### FUNCTIONS ###################
@@ -180,7 +179,8 @@ class Track:
 
         # Update shape colours to indicate next reward gate
         self.gate_shapes[gate % len(self.gate_shapes)].color = (255, 0, 0)
-        self.gate_shapes[(gate + 1) % len(self.gate_shapes)].color = (0, 0, 255)
+        self.gate_shapes[(gate + 1) %
+                         len(self.gate_shapes)].color = (0, 0, 255)
 
         # Check there is at least 1 reward gate
         if len(distances) == 0:
@@ -350,7 +350,8 @@ class Track:
         if self.tmp_vertex == ():
             # Convert 3D array into 2D array
             track_vertices = np.array(self.track_vertices)
-            track_vertices_raw = track_vertices.reshape(track_vertices.shape[0], -1)
+            track_vertices_raw = track_vertices.reshape(
+                track_vertices.shape[0], -1)
 
             # Save file
             np.savetxt(filename, track_vertices_raw, delimiter=", ", fmt="%s")
@@ -371,7 +372,8 @@ class Track:
         ).astype(int)
 
         # Convert 2D array into 3D array
-        track_vertices = track_vertices_raw.reshape(track_vertices_raw.shape[0], 2, 2)
+        track_vertices = track_vertices_raw.reshape(
+            track_vertices_raw.shape[0], 2, 2)
 
         for pair in track_vertices:
             self.create_track(pair[0][0], pair[0][1])

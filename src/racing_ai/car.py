@@ -5,7 +5,7 @@
 import numpy as np
 import pyglet
 
-from .track import Track
+from racing_ai.track import Track
 
 ACCELERATION = 0.8
 ROTATION_SPEED = 30
@@ -36,7 +36,8 @@ class Car:
         self.sprite = pyglet.sprite.Sprite(green_car_image, x=x, y=y)
         self.sprite.scale = 0.05
 
-        self.vector = pyglet.shapes.Line(100, 100, 200, 200, 3, color=(250, 30, 30))
+        self.vector = pyglet.shapes.Line(
+            100, 100, 200, 200, 3, color=(250, 30, 30))
         self.vector.opacity = 250
 
         self.reset()
@@ -61,7 +62,8 @@ class Car:
         self.bearing += self.angular_speed * abs(self.speed) ** 0.4
 
         self.displacement = np.array(
-            [np.cos(np.radians(self.bearing)), -np.sin(np.radians(self.bearing))]
+            [np.cos(np.radians(self.bearing)), -
+             np.sin(np.radians(self.bearing))]
         )  # Normalise displacement vector
         self.angular_speed *= self.friction
 

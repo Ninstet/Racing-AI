@@ -6,11 +6,10 @@ import numpy as np
 import random
 import gym
 
-from .car import Car
-from .track import Track
+from racing_ai.car import Car
+from racing_ai.track import Track
 
 FPS = 10
-
 
 
 # Write a function that converts 0 to SLEEP, 1 to FORWARD, 2 to BACKWARD, 3 to LEFT, 4 to RIGHT
@@ -69,9 +68,9 @@ class Environment(gym.Env):
         reward = (
             -100
             if collision
-            else gate_incentive # + forward_incentive
+            else gate_incentive  # + forward_incentive
         )
-        done = collision or self.no_steps >= FPS * 60 # 60 seconds until timeout
+        done = collision or self.no_steps >= FPS * 60  # 60 seconds until timeout
         info = []
 
         return state, reward, done, info, None

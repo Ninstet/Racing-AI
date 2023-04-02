@@ -1,7 +1,6 @@
 ############### Imports ###############
 
 
-import gymnasium as gym
 import math
 import random
 import matplotlib
@@ -15,7 +14,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-from .env import Environment
+from racing_ai.ml.env import Environment
 
 
 ############### Setup ###############
@@ -33,7 +32,8 @@ plt.ion()
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-Transition = namedtuple("Transition", ("state", "action", "next_state", "reward"))
+Transition = namedtuple(
+    "Transition", ("state", "action", "next_state", "reward"))
 
 
 ############### Replay Memory ###############
@@ -165,7 +165,7 @@ def plot_durations(show_result=False):
 
     plt.xlabel("Episode")
     plt.grid(True)
-    
+
     # Set x axis to show every 5 episodes
     plt.xticks(range(0, len(log["rewards"]), 5))
 
@@ -183,11 +183,12 @@ def plot_durations(show_result=False):
         means = rewards_t.unfold(0, 100, 1).mean(1).view(-1)
         means = torch.cat((torch.zeros(99), means))
         plt.plot(means.numpy(), label="Reward (100 episode average)")
-    
+
     # Display dashed lines where gates are
     for gate in enumerate(log["gates"]):
         # Put the gate number above the line, hozicontally aligned to the line
-        plt.text(gate[1], -5, str(f"Gate {gate[0] + 1}"), color='r', rotation=90, verticalalignment='top')
+        plt.text(gate[1], -5, str(f"Gate {gate[0] + 1}"),
+                 color='r', rotation=90, verticalalignment='top')
         # plt.text(gate[1], max(rewards_t.numpy()), str(f"Gate {gate[0]}"), color='r', rotation=90, verticalalignment='bottom')
         plt.axvline(x=gate[1], color='r', linestyle='--')
 
@@ -216,7 +217,8 @@ def optimize_model():
         device=device,
         dtype=torch.bool,
     )
-    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
+    non_final_next_states = torch.cat(
+        [s for s in batch.next_state if s is not None])
     state_batch = torch.cat(batch.state)
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
@@ -233,13 +235,15 @@ def optimize_model():
     # state value or 0 in case the state was final.
     next_state_values = torch.zeros(BATCH_SIZE, device=device)
     with torch.no_grad():
-        next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0]
+        next_state_values[non_final_mask] = target_net(
+            non_final_next_states).max(1)[0]
     # Compute the expected Q values
     expected_state_action_values = (next_state_values * GAMMA) + reward_batch
 
     # Compute Huber loss
     criterion = nn.SmoothL1Loss()
-    loss = criterion(state_action_values, expected_state_action_values.unsqueeze(1))
+    loss = criterion(state_action_values,
+                     expected_state_action_values.unsqueeze(1))
 
     # Optimize the model
     optimizer.zero_grad()
@@ -264,7 +268,8 @@ if __name__ == "__main__":
         for i_episode in tqdm(range(num_episodes)):
             # Initialize the environment and get it's state
             state, info = env.reset()
-            state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
+            state = torch.tensor(state, dtype=torch.float32,
+                                 device=device).unsqueeze(0)
 
             total_reward = 0
             total_pauses = 0
@@ -275,7 +280,8 @@ if __name__ == "__main__":
 
             for t in count():
                 action = select_action(state)
-                observation, reward, terminated, truncated, _ = env.step(action.item())
+                observation, reward, terminated, truncated, _ = env.step(
+                    action.item())
 
                 total_reward += reward
                 total_pauses += action == 0
