@@ -19,11 +19,11 @@ pip install -e .
 To launch the racing game GUI:
 
 ```sh
-python -m racing_ai.main
+python -m racing_ai
 ```
 
 To start the training pipeline:
 
 ```sh
-python -m racing_ai.ml.train
+python -m racing_ai.ml
 ```

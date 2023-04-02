@@ -256,7 +256,7 @@ def optimize_model():
 ############### Main ###############
 
 
-if __name__ == "__main__":
+def main():
     if torch.cuda.is_available():
         num_episodes = 6000
     else:
